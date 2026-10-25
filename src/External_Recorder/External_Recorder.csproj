@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableSimConnect Condition="'$(EnableSimConnect)' == ''">false</EnableSimConnect>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(EnableSimConnect)' == 'true'">
+    <DefineConstants>$(DefineConstants);MSFS_SIMCONNECT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(EnableSimConnect)' == 'true' and '$(SimConnectInteropPath)' != ''">
+    <Reference Include="Microsoft.FlightSimulator.SimConnect">
+      <HintPath>$(SimConnectInteropPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <Target Name="RequireSimConnectPath" BeforeTargets="ResolveReferences" Condition="'$(EnableSimConnect)' == 'true' and !Exists('$(SimConnectInteropPath)')">
+    <Error Text="EnableSimConnect=true requires -p:SimConnectInteropPath=&lt;path to Microsoft.FlightSimulator.SimConnect.dll&gt;. The SDK DLL is not distributed by this repository." />
+  </Target>
+</Project>
+
