@@ -35,6 +35,10 @@ internal static class Program
         var dumpPath = Path.Combine(Path.GetTempPath(), "msfs-blackbox-self-test.json");
         Dump(dumpPath, "synthetic-self-test", snapshot);
         if (!File.Exists(dumpPath)) return Fail("Self-test dump was not created.");
+        using var document = JsonDocument.Parse(File.ReadAllText(dumpPath));
+        var dumpedFrames = document.RootElement.GetProperty("frames");
+        if (dumpedFrames.GetArrayLength() != 3 || dumpedFrames[0].GetProperty("Timestamp").GetUInt32() != 3)
+            return Fail("Self-test dump did not preserve telemetry fields.");
         Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, dump={dumpPath}");
         return 0;
     }
@@ -42,7 +46,11 @@ internal static class Program
     internal static void Dump(string path, string reason, TelemetryFrame[] frames)
     {
         var payload = new { schema = "msfs-input-blackbox/v1", reason, capturedAtUtc = DateTimeOffset.UtcNow, frames };
-        File.WriteAllText(path, JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(path, JsonSerializer.Serialize(payload, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            IncludeFields = true
+        }));
     }
 
     private static int Fail(string message) { Console.Error.WriteLine($"SELF-TEST FAIL: {message}"); return 1; }
