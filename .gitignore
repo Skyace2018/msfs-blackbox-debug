@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.dll
+*.wasm
+*.spb
+crash_telemetry_dump.json
+**/Packages/
+**/Community/
+**/Official/
+
