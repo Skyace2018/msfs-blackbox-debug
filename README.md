@@ -8,6 +8,7 @@ An experimental, low-overhead flight-input recorder for Microsoft Flight Simulat
 
 - `src/WASM_Hook` — MSFS gauge/WASM sender boundary.
 - `src/External_Recorder` — .NET 8 monitor, ring buffer, JSON dumper, and synthetic self-test.
+- `src/Crash_Decoder` — Windows desktop viewer for validating and exploring saved JSON dumps.
 - `docs/PROTOCOL.md` — binary contract and ownership assumptions.
 - `docs/LIVE_TEST_PLAN.md` — Windows/MSFS validation procedure.
 
@@ -18,6 +19,14 @@ dotnet run --project src/External_Recorder -- --self-test
 ```
 
 The command proves frame layout validation, wraparound behavior, ordered snapshots, and JSON dump creation. It does **not** connect to MSFS.
+
+## Decode a saved crash dump
+
+```powershell
+dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
+```
+
+The viewer plots control inputs, shows raw frames and switch words, and validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
 ## Compiling the live SimConnect boundary
 
