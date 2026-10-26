@@ -18,3 +18,20 @@ Or launch it with no argument and select a file. The viewer rejects unrecognized
 
 The viewer is an offline decoder. It does not infer a root cause or claim that a control movement caused a simulator crash.
 
+## Options and status
+
+The larger dashboard has a right-hand Options panel:
+
+- It reads the `InstalledPackagesPath` entry from the standard MSFS 2020 and MSFS 2024 `UserCfg.opt` locations, then lists the `Community` and (for 2024) `Community2024` candidates it finds.
+- It also lists the standard Steam and Microsoft Store fallback locations. The list is advisory: no folders are created, moved, or modified.
+- Double-click a candidate to save it as the explicit MSFS 2020 or MSFS 2024 Community location. You can instead choose a folder manually. The choices are stored only in `%LocalAppData%\MSFS-Input-Blackbox\settings.json`.
+- The toolbar reads a local recorder-status file every two seconds. When the live SimConnect monitor opens, receives frames, disconnects, or stops, it updates that file; until then it correctly says **Recorder not running**, rather than guessing that MSFS is connected.
+
+Microsoft documents that `UserCfg.opt` identifies the active installed-packages path, and MSFS 2024 distinguishes `Community` from `Community2024`; use the in-sim Virtual File System tool when an installation uses a custom location.
+
+## Design references
+
+- [MSFS 2024 Virtual File System information](https://docs.flightsimulator.com/msfs2024/retail/devmode/menus/tools_info/virtual-file-system/virtual-file-system-information/) — source of truth for `InstalledPackagesPath` and the 2024 folder roles.
+- [MSFS Community-folder support guidance](https://flightsimulator.zendesk.com/hc/en-us/articles/17046732768796-3rd-party-add-ons-and-Community-folder) — current default Steam and Microsoft Store locations.
+- Add-on linkers commonly distinguish simulator versions and let users select a custom Community target; this UI applies that pattern only for discovery and configuration, never package linking or folder mutation.
+
