@@ -66,6 +66,10 @@ public partial class MainWindow : Window
         };
     }
 
+    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void ToggleMaximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
     private void OpenDump_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Crash telemetry dump (*.json)|*.json|All files (*.*)|*.*", Title = "Open MSFS Input Blackbox dump" };
