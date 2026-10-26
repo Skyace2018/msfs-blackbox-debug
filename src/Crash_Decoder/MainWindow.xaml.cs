@@ -35,13 +35,16 @@ public partial class MainWindow : Window
     {
         Msfs2020Path.Text = _settings.Msfs2020CommunityPath ?? string.Empty;
         Msfs2024Path.Text = _settings.Msfs2024CommunityPath ?? string.Empty;
+        ExportFolderPath.Text = _settings.ExportFolder ?? string.Empty;
+        SessionLogPath.Text = _settings.SessionLogPath ?? string.Empty;
         LoggingEnabled.IsChecked = _settings.LoggingEnabled;
         KeepDumps.IsChecked = _settings.KeepCrashDumps;
-        HistorySeconds.SelectedIndex = _settings.HistorySeconds switch { 30 => 0, 120 => 2, _ => 1 };
+        HistorySeconds.SelectedIndex = _settings.HistorySeconds switch { 300 => 1, 900 => 2, 1800 => 3, 3600 => 4, _ => 0 };
         SampleRate.SelectedIndex = _settings.SampleRateHz switch { 15 => 0, 60 => 2, _ => 1 };
         ProfileName.Text = _settings.AircraftProfileName;
         ProfileCard.Text = _settings.AircraftProfileName;
         UpdateLoggingCard();
+        UpdateCapacity(null);
     }
 
     private void Navigate_Click(object sender, RoutedEventArgs e)
@@ -68,6 +71,54 @@ public partial class MainWindow : Window
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Crash telemetry dump (*.json)|*.json|All files (*.*)|*.*", Title = "Open MSFS Input Blackbox dump" };
         if (dialog.ShowDialog(this) == true) LoadDump(dialog.FileName);
     }
+
+    private void ExportBundle_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetDump(out var dump)) return;
+        var dialog = CreateSaveDialog("Developer export (*.zip)|*.zip", "msfs-blackbox-developer-export.zip");
+        if (dialog.ShowDialog(this) != true) return;
+        try { DeveloperExport.CreateBundle(dialog.FileName, dump, dump.Frames); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException) { ShowExportError(ex); }
+    }
+
+    private void Snapshot_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetDump(out var dump)) return;
+        var frame = TelemetryGrid.SelectedItem as TelemetrySample ?? dump.Frames[^1];
+        var dialog = CreateSaveDialog("Telemetry snapshot (*.json)|*.json", "msfs-blackbox-snapshot.json");
+        if (dialog.ShowDialog(this) != true) return;
+        try { DeveloperExport.WriteSnapshot(dialog.FileName, dump, frame); }
+        catch (IOException ex) { ShowExportError(ex); }
+    }
+
+    private void ExportLastTenSeconds_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetDump(out var dump)) return;
+        var lastTimestamp = dump.Frames[^1].Timestamp;
+        var frames = dump.Frames.Where(frame => lastTimestamp - frame.Timestamp <= 10_000).ToArray();
+        var dialog = CreateSaveDialog("Developer export (*.zip)|*.zip", "msfs-blackbox-last-10-seconds.zip");
+        if (dialog.ShowDialog(this) != true) return;
+        try { DeveloperExport.CreateBundle(dialog.FileName, dump, frames); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException) { ShowExportError(ex); }
+    }
+
+    private bool TryGetDump(out TelemetryDump dump)
+    {
+        if (_loadedDump is not null) { dump = _loadedDump; return true; }
+        System.Windows.MessageBox.Show("Open a telemetry dump first.", "No telemetry loaded", MessageBoxButton.OK, MessageBoxImage.Information);
+        dump = null!;
+        return false;
+    }
+
+    private Microsoft.Win32.SaveFileDialog CreateSaveDialog(string filter, string name) => new()
+    {
+        Filter = filter,
+        FileName = name,
+        InitialDirectory = Directory.Exists(_settings.ExportFolder) ? _settings.ExportFolder : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        OverwritePrompt = true
+    };
+
+    private void ShowExportError(Exception ex) => System.Windows.MessageBox.Show(ex.Message, "Cannot create export", MessageBoxButton.OK, MessageBoxImage.Error);
 
     private void LoadDump(string path)
     {
@@ -127,6 +178,23 @@ public partial class MainWindow : Window
         _settings.Msfs2024CommunityPath = Msfs2024Path?.Text.Trim();
         TrySaveSettings();
     }
+    private void ChooseExportFolder_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "Choose the default developer-export folder" };
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) ExportFolderPath.Text = dialog.SelectedPath;
+    }
+    private void ExportFolder_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isApplyingSettings || ExportFolderPath is null) return;
+        _settings.ExportFolder = ExportFolderPath.Text.Trim();
+        TrySaveSettings();
+    }
+    private void SessionLogPath_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isApplyingSettings || SessionLogPath is null) return;
+        _settings.SessionLogPath = SessionLogPath.Text.Trim();
+        TrySaveSettings();
+    }
     private void LoggingOption_Changed(object sender, RoutedEventArgs e)
     {
         if (_isApplyingSettings) return;
@@ -136,6 +204,7 @@ public partial class MainWindow : Window
         _settings.HistorySeconds = int.TryParse((HistorySeconds.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString(), out var seconds) ? seconds : 60;
         _settings.SampleRateHz = int.TryParse((SampleRate.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString(), out var hertz) ? hertz : 30;
         UpdateLoggingCard(); TrySaveSettings();
+        UpdateCapacity(null);
     }
     private void ProfileName_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -144,7 +213,7 @@ public partial class MainWindow : Window
         _settings.AircraftProfileName = string.IsNullOrWhiteSpace(ProfileName.Text) ? "Default / all aircraft" : ProfileName.Text.Trim();
         ProfileCard.Text = _settings.AircraftProfileName; TrySaveSettings();
     }
-    private void UpdateLoggingCard() => LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds}s" : "Disabled";
+    private void UpdateLoggingCard() => LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds / 60.0:F0} min" : "Disabled";
     private void TrySaveSettings() { try { SettingsStore.Save(_settings); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 
     private void TablesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -170,6 +239,27 @@ public partial class MainWindow : Window
         };
         ConnectionCard.Text = state switch { "connected" => "Connected", "connecting" => "Connecting", "disconnected" => "Disconnected", _ => "Recorder not running" };
         ConnectionDetail.Text = status.Detail;
+        UpdateCapacity(status);
+    }
+
+    private void UpdateCapacity(MonitorStatus? status)
+    {
+        if (CapacityBar is null) return;
+        if (status?.BufferCapacity is > 0 && status.BufferedFrames is >= 0)
+        {
+            var percentage = Math.Clamp(status.BufferedFrames.Value * 100.0 / status.BufferCapacity.Value, 0, 100);
+            CapacityBar.Value = percentage;
+            CapacityText.Text = $"Rolling buffer: {status.BufferedFrames:N0} / {status.BufferCapacity:N0} frames ({percentage:F0}%)";
+            PurgeWarning.Text = percentage >= 100 || status.IsPurging
+                ? "Rolling purge is active: the oldest frames are being overwritten."
+                : percentage >= 90 ? "Warning: buffer is at 90% capacity; purge begins at 100%."
+                : "At 90% capacity the monitor will warn; at 100% it overwrites the oldest frames in the rolling buffer.";
+            return;
+        }
+        var plannedFrames = _settings.HistorySeconds * _settings.SampleRateHz;
+        CapacityBar.Value = 0;
+        CapacityText.Text = $"Planned capacity: {plannedFrames:N0} frames ({_settings.HistorySeconds / 60.0:F0} minutes at {_settings.SampleRateHz} Hz)";
+        PurgeWarning.Text = "No live session. The monitor will warn at 90%; at 100% the rolling buffer overwrites the oldest frames.";
     }
 
     private void ApplyWindows11Chrome()
