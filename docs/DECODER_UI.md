@@ -18,6 +18,22 @@ Or launch it with no argument and select a file. The viewer rejects unrecognized
 - **Telemetry tables** — a classic debugger-style table navigator in the upper-left, with raw input frames on the right.
 - **Settings** — persistent MSFS 2020/2024 Community-folder choices and detected candidates.
 
+The navigation rail and the telemetry-table rail both have draggable splitters, and the main window has ordinary Windows move/resize controls.
+
+## Developer handoff and snapshots
+
+With a dump open, the tool can create three local artifacts at a location chosen by the user:
+
+- **Snapshot** writes the selected frame (or the final frame if none is selected) to a small JSON file.
+- **Export last 10s** writes the last ten seconds of the loaded dump to a ZIP.
+- **Export developer bundle** writes the entire loaded dump to a ZIP.
+
+Bundles contain `telemetry.json`, a machine-readable `manifest.json`, and a short README. They intentionally exclude local Community-folder paths, settings, simulator binaries, and unrelated files. Review the selected telemetry before sharing it.
+
+## Rolling capacity
+
+The retention selector now supports up to one hour. The dashboard estimates its planned frame capacity from retention × sample rate. During a real monitor session, the live status contract can supply the actual count/capacity; the UI warns at 90%, and the recorder ring buffer raises a one-time 90% capacity event. At full capacity it remains a rolling buffer, overwriting the oldest frames rather than stopping capture.
+
 The viewer is an offline decoder. It does not infer a root cause or claim that a control movement caused a simulator crash.
 
 ## Windows 11 presentation
