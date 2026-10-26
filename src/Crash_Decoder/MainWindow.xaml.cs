@@ -17,6 +17,8 @@ public partial class MainWindow : Window
     private bool _isApplyingSettings;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
     private TrayFlyout? _trayFlyout;
+    private Guid? _pendingEventId;
+    private string _captureMessage = "";
 
     public MainWindow(string? initialDumpPath)
     {
@@ -52,6 +54,7 @@ public partial class MainWindow : Window
         HistorySeconds.SelectedIndex = _settings.HistorySeconds switch { 300 => 1, 900 => 2, 1800 => 3, 3600 => 4, _ => 0 };
         SampleRate.SelectedIndex = _settings.SampleRateHz switch { 15 => 0, 60 => 2, _ => 1 };
         ProfileName.Text = _settings.AircraftProfileName;
+        AircraftTitle.Text = _settings.AircraftTitle ?? string.Empty;
         ProfileCard.Text = _settings.AircraftProfileName;
         UpdateLoggingCard();
         UpdateCapacity(null);
@@ -106,7 +109,7 @@ public partial class MainWindow : Window
                 ToggleTrayFlyout();
         });
         _trayIcon.MouseDoubleClick += (_, e) => Dispatcher.BeginInvoke(() => RestoreFullScreen());
-        _trayFlyout = new TrayFlyout(RestoreFullScreen, Close);
+        _trayFlyout = new TrayFlyout(RestoreFullScreen, Close, MarkEvent);
     }
 
     private void MinimizeToTray()
@@ -130,8 +133,48 @@ public partial class MainWindow : Window
     {
         if (_trayFlyout is null) return;
         if (_trayFlyout.IsVisible) { _trayFlyout.Hide(); return; }
+        _trayFlyout.UpdateDashboard(MonitorStatusReader.Read(), _captureMessage, _pendingEventId is not null, _settings.AircraftTitle);
+        _trayFlyout.ShowNearTaskbar();
+    }
+
+    private void MarkEvent_Click(object sender, RoutedEventArgs e) => MarkEvent();
+
+    private void MarkEvent()
+    {
         var status = MonitorStatusReader.Read();
-        _trayFlyout.ShowNearTaskbar(status.State == "connected" ? "MSFS connected: " + status.Detail : "Recorder: " + status.Detail);
+        if (status.State != "connected" || status.LatestInput is null || status.SessionId is not { } sessionId)
+        {
+            _captureMessage = "No confirmed live telemetry session. Start the external recorder before marking an event.";
+            _trayFlyout?.UpdateDashboard(status, _captureMessage, false, _settings.AircraftTitle);
+            System.Windows.MessageBox.Show(_captureMessage, "Event not marked", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (_pendingEventId is not null) return;
+        var folder = _settings.ExportFolder;
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "Choose where timestamped Blackbox developer exports are saved" };
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+            folder = dialog.SelectedPath;
+            _settings.ExportFolder = folder;
+            ExportFolderPath.Text = folder;
+            TrySaveSettings();
+        }
+        try
+        {
+            var filename = $"msfs-blackbox-event-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.zip";
+            var outputPath = Path.Combine(folder!, filename);
+            _pendingEventId = EventCaptureClient.Queue(sessionId, outputPath, _settings.AircraftProfileName,
+                string.IsNullOrWhiteSpace(status.AircraftType) ? _settings.AircraftTitle : status.AircraftType,
+                !string.IsNullOrWhiteSpace(status.AircraftType) ? "recorder-reported" :
+                    !string.IsNullOrWhiteSpace(_settings.AircraftTitle) ? "user-entered" : "unavailable");
+            _captureMessage = "Event marked. Waiting for the recorder to save the developer ZIP…";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _captureMessage = "Could not request event capture: " + ex.Message;
+        }
+        _trayFlyout?.UpdateDashboard(status, _captureMessage, _pendingEventId is not null, _settings.AircraftTitle);
     }
 
     private void OpenDump_Click(object sender, RoutedEventArgs e)
@@ -281,6 +324,12 @@ public partial class MainWindow : Window
         _settings.AircraftProfileName = string.IsNullOrWhiteSpace(ProfileName.Text) ? "Default / all aircraft" : ProfileName.Text.Trim();
         ProfileCard.Text = _settings.AircraftProfileName; TrySaveSettings();
     }
+    private void AircraftTitle_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isApplyingSettings || AircraftTitle is null) return;
+        _settings.AircraftTitle = string.IsNullOrWhiteSpace(AircraftTitle.Text) ? null : AircraftTitle.Text.Trim();
+        TrySaveSettings();
+    }
     private void UpdateLoggingCard() => LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds / 60.0:F0} min" : "Disabled";
     private void TrySaveSettings() { try { SettingsStore.Save(_settings); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 
@@ -297,6 +346,22 @@ public partial class MainWindow : Window
     private void UpdateStatus()
     {
         var status = MonitorStatusReader.Read();
+        if (_pendingEventId is { } pending)
+        {
+            try
+            {
+                var result = EventCaptureClient.TakeResult(pending);
+                if (result is not null)
+                {
+                    _pendingEventId = null;
+                    _captureMessage = result.Success ? "Developer export saved: " + result.OutputPath : "Event export failed: " + result.Error;
+                    _trayIcon?.ShowBalloonTip(4000, result.Success ? "Blackbox event saved" : "Blackbox event export failed",
+                        _captureMessage, result.Success ? System.Windows.Forms.ToolTipIcon.Info : System.Windows.Forms.ToolTipIcon.Warning);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            { _captureMessage = "Could not read the event export result: " + ex.Message; }
+        }
         var state = status.State.ToLowerInvariant();
         SidebarStatus.Text = state switch
         {
@@ -308,6 +373,7 @@ public partial class MainWindow : Window
         ConnectionCard.Text = state switch { "connected" => "Connected", "connecting" => "Connecting", "disconnected" => "Disconnected", _ => "Recorder not running" };
         ConnectionDetail.Text = status.Detail;
         UpdateCapacity(status);
+        if (_trayFlyout?.IsVisible == true) _trayFlyout.UpdateDashboard(status, _captureMessage, _pendingEventId is not null, _settings.AircraftTitle);
     }
 
     private void UpdateCapacity(MonitorStatus? status)
