@@ -28,6 +28,8 @@ dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 
 The Windows 11–styled viewer dashboard has a branded debugger-style layout: resizable navigation/table rails, telemetry tables, aircraft profiles, logging preferences, developer export/snapshot tools, and Community-folder discovery. It validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
+The dashboard now has a collapsible navigation rail, an expandable input chart, a **Live View** toggle, high-contrast connection state with a polling indicator, and **Copy diagnostics** for a small JSON handoff. Live View reads a bounded local preview published by the external recorder; it does not start a SimConnect session itself.
+
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
 Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
 
