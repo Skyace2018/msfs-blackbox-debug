@@ -9,6 +9,9 @@ internal sealed class MonitorStatus
     public string Detail { get; init; } = "The external recorder has not published status.";
     public DateTimeOffset UpdatedAtUtc { get; init; }
     public uint? LastFrameTimestamp { get; init; }
+    public int? BufferedFrames { get; init; }
+    public int? BufferCapacity { get; init; }
+    public bool IsPurging { get; init; }
 }
 
 internal static class MonitorStatusReader
