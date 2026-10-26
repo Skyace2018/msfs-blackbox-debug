@@ -2,9 +2,16 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Retained temporarily for source-history reference; the WPF shell replaces these WinForms views. -->
+    <Compile Remove="DecoderForm.cs" />
+    <Compile Remove="TimelinePanel.cs" />
+    <Compile Remove="Program.cs" />
+  </ItemGroup>
 </Project>
 
