@@ -36,12 +36,14 @@ With a dump open, the tool can create three local artifacts at a location chosen
 
 - **Snapshot** writes the selected frame (or the final frame if none is selected) to a small JSON file.
 - **Export last 10s** writes the last ten seconds of the loaded dump to a ZIP.
-- **Export developer bundle** writes the entire loaded dump to a ZIP.
+- **Export developer bundle** writes the entire loaded dump and a bounded viewer diagnostic log to a ZIP. With no dump open, it writes a diagnostics-only ZIP with path-free recorder status.
 - **Copy diagnostics** copies a small JSON snippet with recorder status, optional dump metadata, and the selected or latest input to the clipboard. It excludes configured local paths. Review it before pasting into an issue or chat.
 
 Dashboard quick actions use outlined blue buttons for visibility. **Mark live event + export** still requires a confirmed live recorder session.
 
-Bundles contain `telemetry.json`, a machine-readable `manifest.json`, and a short README. They intentionally exclude local Community-folder paths, settings, simulator binaries, and unrelated files. Review the selected telemetry before sharing it.
+Bundles contain a machine-readable `manifest.json`, `viewer-diagnostics.log`, and a short README. A bundle made with a dump open also contains `telemetry.json`; a diagnostics-only bundle contains `recorder-status.json` instead. They intentionally exclude local Community-folder paths, settings, simulator binaries, and unrelated files. Review the contents before sharing them.
+
+The development viewer writes a local `viewer-diagnostics.log` under `%LocalAppData%\MSFS-Input-Blackbox`. It records startup, exit, recorder state transitions, and unhandled exception types, HRESULTs, and method names. It excludes exception messages and configured folder paths. The active log rolls at 1 MB. Export is explicit; no diagnostic data is sent automatically. This is a viewer log, not an MSFS crash stack trace.
 
 ## Rolling capacity
 
