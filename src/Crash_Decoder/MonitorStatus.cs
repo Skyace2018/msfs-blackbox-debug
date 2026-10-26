@@ -16,6 +16,8 @@ internal sealed class MonitorStatus
     public string? AircraftType { get; init; }
     public TelemetrySample? LatestInput { get; init; }
     public DateTimeOffset? LastFrameReceivedAtUtc { get; init; }
+    public double? IndicatedAirspeedKnots { get; init; }
+    public double? AltitudeFeet { get; init; }
 }
 
 internal static class MonitorStatusReader
