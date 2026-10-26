@@ -11,7 +11,6 @@ public sealed class SimConnectMonitor : IDisposable
     private const string ClientDataName = "MSFS.InputBlackbox.Telemetry.v1";
     private readonly SimConnect _simConnect;
     private bool _disposed;
-    private DateTimeOffset _lastStatusWrite;
 
     private enum ClientDataId : uint { Telemetry = 0x4B424F58 }
     private enum DefinitionId : uint { Telemetry = 0x4B424F59 }
@@ -36,7 +35,7 @@ public sealed class SimConnectMonitor : IDisposable
         _simConnect.RequestClientData((uint)ClientDataId.Telemetry, (uint)RequestId.Telemetry,
             (uint)DefinitionId.Telemetry, SIMCONNECT_CLIENT_DATA_PERIOD.SIMCONNECT_CLIENT_DATA_PERIOD_VISUAL_FRAME,
             SIMCONNECT_CLIENT_DATA_REQUEST_FLAG.SIMCONNECT_CLIENT_DATA_REQUEST_FLAG_CHANGED, 0, 0, 0);
-        MonitorStatusStore.Report("connected", "SimConnect session opened; waiting for telemetry.");
+        MonitorStatusStore.Report("connecting", "SimConnect session opened; waiting for telemetry.");
     }
 
     // Call from the host window's message handler for the message ID passed to the constructor.
@@ -46,11 +45,6 @@ public sealed class SimConnectMonitor : IDisposable
     {
         if (data.dwRequestID != (uint)RequestId.Telemetry || data.dwData is not { Length: > 0 }) return;
         if (data.dwData[0] is not TelemetryFrame frame) return;
-        if (DateTimeOffset.UtcNow - _lastStatusWrite > TimeSpan.FromSeconds(2))
-        {
-            _lastStatusWrite = DateTimeOffset.UtcNow;
-            MonitorStatusStore.Report("connected", "Receiving telemetry frames.", frame.Timestamp);
-        }
         FrameReceived?.Invoke(frame);
     }
 
@@ -65,8 +59,6 @@ public sealed class SimConnectMonitor : IDisposable
         if (_disposed) return;
         _disposed = true;
         _simConnect.Dispose();
-        MonitorStatusStore.Report("not-running", "The external recorder stopped.");
     }
 }
 #endif
-
