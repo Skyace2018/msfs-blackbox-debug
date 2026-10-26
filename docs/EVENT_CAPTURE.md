@@ -18,14 +18,14 @@ The request includes the live session ID, so a later recorder session cannot tur
 | File | Contents |
 | --- | --- |
 | `telemetry.json` | Ordered buffered frames with yoke X/Y, rudder, throttle, four switch words, and millisecond timestamps. |
-| `event.json` | Event ID, UTC marker and capture times, session ID, last buffered inputs, captured-variable names, optional aircraft title, and identity-source note. |
+| `event.json` | Event ID, UTC marker and capture times, session ID, last buffered inputs, captured-variable names, optional aircraft title, indicated airspeed/altitude when received, and identity-source note. |
 | `manifest.json` | Export schema, frame count, time range, and timestamp interpretation. |
 | `README.txt` | Short explanation for the receiving developer. |
 
-The current 36-byte telemetry protocol does not contain aircraft identity, airspeed, altitude, or engine state. An aircraft title entered under **Aircraft profiles** appears in the export as **user-entered** and is not claimed to be verified by MSFS. If no title is entered, the aircraft type is `null`. Automatic aircraft-title detection is a future SDK task; the [MSFS 2024 SimConnect documentation](https://docs.flightsimulator.com/msfs2024/flighting/programming-apis/simconnect/api-reference/events-and-data/simconnect_requestdataonsimobject/) describes requesting the user aircraft's title, but this project has not validated that managed request in a live session.
+The 36-byte input frame does not contain aircraft identity, airspeed, altitude, or engine state. The SDK-enabled recorder now has a separate user-aircraft SimConnect request for title, indicated airspeed, and plane altitude. When those values arrive, `event.json` identifies them as recorder-reported and includes the observation time. This request has only passed a local compile probe using a test double; it has **not** been built against the official SDK or tested in MSFS. An aircraft title entered under **Aircraft profiles** remains a fallback and is labeled **user-entered**. Engine state is not captured. The [MSFS 2024 SimConnect request documentation](https://docs.flightsimulator.com/msfs2024/flighting/programming-apis/simconnect/api-reference/events-and-data/simconnect_requestdataonsimobject/) describes querying the user aircraft.
 
 Exports include selected control telemetry and the optional aircraft label. They do not include Community-folder paths, account data, SDK binaries, or simulator packages. Review telemetry before sending a ZIP to a developer.
 
 ## Verification status
 
-The simulator-free self-test verifies a request produces a ZIP with the marker, last input, captured-variable list, and aircraft label. Live SimConnect capture, automatic aircraft identification, timeout behavior, and tray confirmation require the Windows/MSFS procedure in [LIVE_TEST_PLAN.md](LIVE_TEST_PLAN.md). Do not treat a synthetic event export as proof of a live flight recording.
+The simulator-free self-test verifies a request produces a ZIP with the marker, last input, captured-variable list, aircraft title, indicated airspeed, and altitude from synthetic input. Live SimConnect capture, automatic aircraft identification, timeout behavior, and tray confirmation require the Windows/MSFS procedure in [LIVE_TEST_PLAN.md](LIVE_TEST_PLAN.md). Do not treat a synthetic event export as proof of a live flight recording.
