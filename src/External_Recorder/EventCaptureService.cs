@@ -31,6 +31,7 @@ internal sealed class EventCaptureService
     private readonly string _resultDirectory;
     private readonly Guid _sessionId = Guid.NewGuid();
     private TelemetryFrame? _latest;
+    private AircraftState? _aircraftState;
 
     public EventCaptureService(int capacity, string dataDirectory)
     {
@@ -52,6 +53,8 @@ internal sealed class EventCaptureService
         _ring.Add(frame);
         _latest = frame;
     }
+
+    public void SetAircraftState(AircraftState state) => _aircraftState = state;
 
     public void ProcessRequests()
     {
@@ -99,6 +102,9 @@ internal sealed class EventCaptureService
                 stage = "write archive entries";
                 var last = frames[^1];
                 var capturedAtUtc = DateTimeOffset.UtcNow;
+                var aircraft = _aircraftState;
+                var aircraftTitle = string.IsNullOrWhiteSpace(aircraft?.Title) ? request.AircraftType : aircraft.Value.Title;
+                var aircraftSource = string.IsNullOrWhiteSpace(aircraft?.Title) ? request.AircraftSource : "recorder-reported";
                 WriteJson(zip, "telemetry.json", new
                 {
                     schema = "msfs-input-blackbox/v1", reason = "user-marked-event",
@@ -109,17 +115,25 @@ internal sealed class EventCaptureService
                     schema = "msfs-input-blackbox/event/v1", eventId = request.Id,
                     markedAtUtc = request.MarkedAtUtc, capturedAtUtc,
                     sessionId = _sessionId, lastBufferedFrameTimestampMs = last.Timestamp,
-                    lastInputs = last, aircraftType = request.AircraftType,
-                    aircraftIdentityStatus = string.IsNullOrWhiteSpace(request.AircraftType) ?
-                        "Unavailable: the v1 telemetry transport does not include aircraft identity." : request.AircraftSource switch
+                    lastInputs = last, aircraftType = aircraftTitle,
+                    aircraftIdentityStatus = string.IsNullOrWhiteSpace(aircraftTitle) ?
+                        "Unavailable: no aircraft title was supplied." : aircraftSource switch
                     {
-                        "recorder-reported" => "Reported by the external recorder; live identity verification remains pending.",
+                        "recorder-reported" => "Reported by the external recorder from the user aircraft SimConnect data request.",
                         "user-entered" => "User-entered aircraft title; not verified by the live telemetry transport.",
                         _ => "Aircraft title supplied without a verified source."
                     },
                     aircraftProfile = request.AircraftProfile,
-                    variablesCaptured = new[] { "YokeX", "YokeY", "Rudder", "Throttle", "Switches0", "Switches1", "Switches2", "Switches3" },
-                    additionalSimulatorVariablesStatus = "Not captured by the v1 transport; airspeed, altitude, and engine state are unavailable."
+                    variablesCaptured = new[] { "YokeX", "YokeY", "Rudder", "Throttle", "Switches0", "Switches1", "Switches2", "Switches3" }
+                        .Concat(aircraft is null ? [] : ["IndicatedAirspeedKnots", "AltitudeFeet"]).ToArray(),
+                    aircraftVariables = aircraft is null ? null : new
+                    {
+                        aircraft.Value.IndicatedAirspeedKnots, aircraft.Value.AltitudeFeet,
+                        aircraft.Value.ObservedAtUtc
+                    },
+                    additionalSimulatorVariablesStatus = aircraft is null
+                        ? "User-aircraft SimConnect variables were not received; airspeed and altitude are unavailable."
+                        : "Indicated airspeed and plane altitude are from the latest recorder-reported user-aircraft sample; engine state is not captured."
                 });
                 WriteJson(zip, "manifest.json", new
                 {
@@ -132,7 +146,7 @@ internal sealed class EventCaptureService
                 notes.WriteLine("MSFS Input Blackbox event export");
                 notes.WriteLine("telemetry.json contains the rolling inputs captured when the event request was processed.");
                 notes.WriteLine("event.json contains the user timestamp, latest inputs, and available aircraft metadata.");
-                notes.WriteLine("Aircraft title is user-entered when present; the v1 telemetry transport does not verify it.");
+                notes.WriteLine("Aircraft title and aircraft variables identify their source in event.json; review before sharing.");
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
