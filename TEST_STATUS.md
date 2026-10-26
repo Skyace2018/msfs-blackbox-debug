@@ -12,10 +12,10 @@ Date: 2026-10-25
 | Developer export and rolling-capacity UI | VERIFIED | Recorder and WPF decoder both built with 0 warnings; decoder self-test and a subsequent 10-second launch smoke test passed. Export contents and live buffer percentage still require an actual telemetry session. |
 | Maximized launch and in-app window controls | VERIFIED | The WPF decoder builds with 0 warnings after adding default maximized launch plus persistent minimize, restore/maximize, and close controls. |
 | System / Light / Dark theme selector | VERIFIED | The decoder builds with 0 warnings and passed a 10-second launch smoke test after adding persistent theme preferences and theme-aware WPF checkbox/dropdown controls. |
+| Tray UI, dropdown layout, and executable icon | VERIFIED | The updated decoder built with 0 warnings and errors. Its synthetic self-test exited successfully. A local window smoke test obtained a nonzero main-window handle; a Windows minimize command left the process running and hid the main window. The generated executable contained a 32×32 embedded icon. The tray popup and dropdowns still need hands-on visual confirmation on the target desktop. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
 | MSFS SDK WASM compile | BLOCKED | No MSFS SDK/toolchain was available in this environment. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
 | Crash / disconnect behavior in MSFS | UNKNOWN | Must be exercised using the procedure in `docs/LIVE_TEST_PLAN.md`. |
 
 The terms are intentional: **VERIFIED** means this workspace produced direct evidence; **BLOCKED** means a necessary local prerequisite is absent; **UNKNOWN** means no claim is made.
-
