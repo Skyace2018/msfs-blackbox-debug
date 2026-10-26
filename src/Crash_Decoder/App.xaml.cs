@@ -8,6 +8,7 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ThemeManager.Apply(SettingsStore.Load().ThemeMode);
         if (e.Args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
         {
             Shutdown(SelfTest.Run() ? 0 : 1);
