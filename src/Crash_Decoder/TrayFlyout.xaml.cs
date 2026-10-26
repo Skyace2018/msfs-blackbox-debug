@@ -32,6 +32,8 @@ public partial class TrayFlyout : Window
         AircraftText.Text = !string.IsNullOrWhiteSpace(status.AircraftType) ? "Aircraft: " + status.AircraftType
             : !string.IsNullOrWhiteSpace(configuredAircraftTitle) ? "Aircraft: " + configuredAircraftTitle + " (user-entered)"
             : "Aircraft: Not reported by current telemetry";
+        if (status.IndicatedAirspeedKnots is { } airspeed && status.AltitudeFeet is { } altitude)
+            AircraftText.Text += $"\nIAS {airspeed:F1} kt  •  Altitude {altitude:F0} ft";
         var frame = status.LatestInput;
         InputText.Text = frame is null ? "Last inputs: waiting for frames" :
             $"Last inputs  •  Yoke {frame.YokeX:F2}, {frame.YokeY:F2}  •  Rudder {frame.Rudder:F2}  •  Throttle {frame.Throttle:F2}\nSwitches: {frame.Switches0:X8} {frame.Switches1:X8} {frame.Switches2:X8} {frame.Switches3:X8}";
