@@ -18,6 +18,9 @@
       <Private>true</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="artifacts/**/*.cs" />
+  </ItemGroup>
   <Target Name="RequireSimConnectPath" BeforeTargets="ResolveReferences" Condition="'$(EnableSimConnect)' == 'true' and !Exists('$(SimConnectInteropPath)')">
     <Error Text="EnableSimConnect=true requires -p:SimConnectInteropPath=&lt;path to Microsoft.FlightSimulator.SimConnect.dll&gt;. The SDK DLL is not distributed by this repository." />
   </Target>
