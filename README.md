@@ -11,6 +11,7 @@ An experimental, low-overhead flight-input recorder for Microsoft Flight Simulat
 - `src/Crash_Decoder` — Windows 11–styled WPF dashboard for live status, local simulator settings, and saved JSON dumps.
 - `docs/PROTOCOL.md` — binary contract and ownership assumptions.
 - `docs/LIVE_TEST_PLAN.md` — Windows/MSFS validation procedure.
+- `docs/PORTABLE_TEST_PACKAGE.md` — what the Windows development ZIP includes and how to test it on another PC.
 
 ## Quick start: synthetic recorder test
 
@@ -29,6 +30,8 @@ dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 The Windows 11–styled viewer dashboard has a branded debugger-style layout: resizable navigation/table rails, telemetry tables, aircraft profiles, logging preferences, developer export/snapshot tools, and Community-folder discovery. It validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
 The dashboard now has a collapsible navigation rail, an expandable input chart, a **Live View** toggle, high-contrast connection state with a polling indicator, and **Copy diagnostics** for a small JSON handoff. Live View reads a bounded local preview published by the external recorder; it does not start a SimConnect session itself.
+
+For another Windows x64 computer, use the self-contained development ZIP described in [portable test package](docs/PORTABLE_TEST_PACKAGE.md). Extract the whole ZIP, then double-click `Crash_Decoder.exe`; no PowerShell or separate .NET installation is needed. The development build also records bounded local viewer diagnostics and can export them without a telemetry dump.
 
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
 Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
