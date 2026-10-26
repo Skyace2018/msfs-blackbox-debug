@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         Msfs2024Path.Text = _settings.Msfs2024CommunityPath ?? string.Empty;
         ExportFolderPath.Text = _settings.ExportFolder ?? string.Empty;
         SessionLogPath.Text = _settings.SessionLogPath ?? string.Empty;
+        ThemeMode.SelectedIndex = _settings.ThemeMode switch { "Light" => 1, "Dark" => 2, _ => 0 };
         LoggingEnabled.IsChecked = _settings.LoggingEnabled;
         KeepDumps.IsChecked = _settings.KeepCrashDumps;
         HistorySeconds.SelectedIndex = _settings.HistorySeconds switch { 300 => 1, 900 => 2, 1800 => 3, 3600 => 4, _ => 0 };
@@ -64,6 +65,15 @@ public partial class MainWindow : Window
             "Settings" => "Discover or configure local Community folder locations.",
             _ => "Review recent inputs and recorder health."
         };
+    }
+
+    private void ThemeMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isApplyingSettings || ThemeMode.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
+        _settings.ThemeMode = item.Content?.ToString() ?? "System";
+        ThemeManager.Apply(_settings.ThemeMode);
+        ApplyWindows11Chrome();
+        TrySaveSettings();
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
@@ -269,7 +279,7 @@ public partial class MainWindow : Window
     private void ApplyWindows11Chrome()
     {
         var handle = new WindowInteropHelper(this).Handle;
-        var dark = 1; DwmSetWindowAttribute(handle, 20, ref dark, sizeof(int));
+        var dark = ThemeManager.IsDark ? 1 : 0; DwmSetWindowAttribute(handle, 20, ref dark, sizeof(int));
         var rounded = 2; DwmSetWindowAttribute(handle, 33, ref rounded, sizeof(int));
     }
 
