@@ -31,7 +31,11 @@ internal static class Program
         };
         File.WriteAllText(path, JsonSerializer.Serialize(payload));
         var dump = TelemetryDumpReader.Read(path);
-        return dump.Frames.Count == 2 && dump.Frames[1].Timestamp == 20 && Math.Abs(dump.Frames[1].Throttle - 0.7f) < 0.0001f;
+        var configPath = Path.Combine(Path.GetTempPath(), "msfs-blackbox-usercfg-self-test.opt");
+        File.WriteAllText(configPath, "InstalledPackagesPath \"D:\\MSFS Packages\"");
+        var packagesPath = CommunityFolderDiscovery.ExtractPackagesPath(File.ReadAllText(configPath));
+        return dump.Frames.Count == 2 && dump.Frames[1].Timestamp == 20 && Math.Abs(dump.Frames[1].Throttle - 0.7f) < 0.0001f
+            && string.Equals(packagesPath, "D:\\MSFS Packages", StringComparison.OrdinalIgnoreCase);
     }
 }
 
