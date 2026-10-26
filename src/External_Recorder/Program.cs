@@ -1,6 +1,7 @@
 // MIT License. Copyright (c) 2026 MSFS-Input-Blackbox contributors.
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.IO.Compression;
 
 namespace MsfsInputBlackbox;
 
@@ -13,8 +14,7 @@ internal static class Program
     {
         if (args.Contains("--self-test", StringComparer.OrdinalIgnoreCase)) return RunSelfTest();
 #if MSFS_SIMCONNECT
-        Console.Error.WriteLine("Live SimConnect mode must be wired to the SDK event loop after the target SDK transport is verified; see docs/LIVE_TEST_PLAN.md.");
-        return 2;
+        return LiveRecorderHost.Run();
 #else
         Console.Error.WriteLine("Build with --self-test for a simulator-free test, or set EnableSimConnect=true and SimConnectInteropPath for the official interop assembly.");
         return 2;
@@ -39,7 +39,42 @@ internal static class Program
         var dumpedFrames = document.RootElement.GetProperty("frames");
         if (dumpedFrames.GetArrayLength() != 3 || dumpedFrames[0].GetProperty("Timestamp").GetUInt32() != 3)
             return Fail("Self-test dump did not preserve telemetry fields.");
-        Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, dump={dumpPath}");
+        var eventDirectory = Path.Combine(Path.GetTempPath(), "msfs-blackbox-event-test-" + Guid.NewGuid().ToString("N"));
+        var capture = new EventCaptureService(3, eventDirectory);
+        foreach (var frame in snapshot) capture.AddFrame(frame);
+        var id = Guid.NewGuid();
+        var eventPath = Path.Combine(eventDirectory, "event.zip");
+        var requestPath = Path.Combine(eventDirectory, "event-requests", id.ToString("N") + ".json");
+        File.WriteAllText(requestPath, JsonSerializer.Serialize(new EventCaptureRequest
+        {
+            Id = id, SessionId = capture.SessionId, MarkedAtUtc = DateTimeOffset.UtcNow, OutputPath = eventPath,
+            AircraftProfile = "Synthetic profile", AircraftType = "Synthetic aircraft", AircraftSource = "user-entered"
+        }));
+        File.WriteAllText(Path.ChangeExtension(requestPath, ".ready"), "");
+        capture.ProcessRequests();
+        if (!File.Exists(eventPath))
+        {
+            var resultPath = Path.Combine(eventDirectory, "event-results", id.ToString("N") + ".json");
+            return Fail("Event request did not create a developer ZIP: " + (File.Exists(resultPath) ? File.ReadAllText(resultPath) : "no result"));
+        }
+        using (var zip = ZipFile.OpenRead(eventPath))
+        {
+            if (zip.GetEntry("telemetry.json") is null || zip.GetEntry("event.json") is null || zip.GetEntry("manifest.json") is null)
+                return Fail("Event export is missing telemetry, event, or manifest data.");
+            using var eventDocument = JsonDocument.Parse(zip.GetEntry("event.json")!.Open());
+            var eventRoot = eventDocument.RootElement;
+            if (eventRoot.GetProperty("lastInputs").GetProperty("Timestamp").GetUInt32() != 5 ||
+                eventRoot.GetProperty("aircraftType").GetString() != "Synthetic aircraft" ||
+                eventRoot.GetProperty("variablesCaptured").GetArrayLength() != 8 ||
+                !eventRoot.TryGetProperty("markedAtUtc", out _))
+                return Fail("Event export is missing the marker, last input, variables, or aircraft label.");
+        }
+        File.WriteAllText(Path.Combine(eventDirectory, "settings.json"),
+            "{\"HistorySeconds\":3600,\"SampleRateHz\":60,\"LoggingEnabled\":true,\"KeepCrashDumps\":true}");
+        var preferences = RecorderPreferences.Load(eventDirectory);
+        if (preferences.HistorySeconds != 3600 || preferences.SampleRateHz != 60)
+            return Fail("Recorder did not load the selected one-hour history and 60 Hz sample rate.");
+        Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, event ZIP created, one-hour preferences loaded, dump={dumpPath}");
         return 0;
     }
 
@@ -55,4 +90,3 @@ internal static class Program
 
     private static int Fail(string message) { Console.Error.WriteLine($"SELF-TEST FAIL: {message}"); return 1; }
 }
-
