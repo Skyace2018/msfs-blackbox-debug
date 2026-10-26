@@ -1,34 +1,36 @@
 <Window x:Class="MsfsInputBlackbox.Decoder.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MSFS Input Blackbox" Height="900" Width="1440" MinHeight="720" MinWidth="1120"
+        Title="MSFS Input Blackbox" Height="900" Width="1440" MinHeight="650" MinWidth="900"
         Background="{DynamicResource AppBackground}" Foreground="{DynamicResource Text}"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" SizeToContent="Manual" WindowState="Maximized">
   <Window.Resources>
     <Style x:Key="Card" TargetType="Border"><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="BorderBrush" Value="{DynamicResource Border}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="14"/><Setter Property="Padding" Value="20"/><Setter Property="Margin" Value="0,0,14,0"/></Style>
+    <Style x:Key="QuickActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="#1B5E98"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderBrush" Value="#52A8FF"/><Setter Property="BorderThickness" Value="1.5"/><Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="14,8"/></Style>
   </Window.Resources>
-  <Grid>
-    <Grid.ColumnDefinitions><ColumnDefinition Width="260" MinWidth="220"/><ColumnDefinition Width="6"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <Border Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,1,0">
+  <Grid x:Name="ShellGrid">
+    <Grid.ColumnDefinitions><ColumnDefinition x:Name="SidebarColumn" Width="260" MinWidth="0"/><ColumnDefinition x:Name="SidebarSplitColumn" Width="6"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Border x:Name="SidebarPanel" Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,1,0">
       <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Margin="18,20,18,10">
-          <StackPanel Orientation="Horizontal">
-            <Border Width="42" Height="42" CornerRadius="12" Background="#1B5E98" Margin="0,0,10,0"><TextBlock Text="✦" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-            <StackPanel><TextBlock Text="BLACKBOX" FontSize="18" FontWeight="Bold"/><TextBlock Text="MSFS input debugger" Foreground="{StaticResource Muted}" FontSize="11"/></StackPanel>
-          </StackPanel>
-          <Border Margin="0,20,0,2" Padding="10,8" CornerRadius="8" Background="#132536"><TextBlock x:Name="SidebarStatus" Foreground="#8FC9FF" TextWrapping="Wrap"/></Border>
+        <StackPanel x:Name="SidebarTop" DockPanel.Dock="Top" Margin="12,20,12,10">
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <Border x:Name="BrandIcon" Width="42" Height="42" CornerRadius="12" Background="#1B5E98" Margin="0,0,10,0"><TextBlock Text="✦" FontSize="24" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+            <StackPanel x:Name="BrandText" Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="BLACKBOX" FontSize="18" FontWeight="Bold"/><TextBlock Text="MSFS input debugger" Foreground="{DynamicResource Muted}" FontSize="11"/></StackPanel>
+            <Button x:Name="ToggleSidebarButton" Grid.Column="2" Width="32" Height="34" Padding="0" Margin="2,0,0,0" Content="☰" Click="ToggleSidebar_Click" ToolTip="Collapse navigation to icons"/>
+          </Grid>
+          <Border x:Name="SidebarStatusBorder" Margin="0,20,0,2" Padding="10,8" CornerRadius="8" Background="{DynamicResource SidebarStatusBackground}"><TextBlock x:Name="SidebarStatus" Foreground="{DynamicResource StatusWarning}" TextWrapping="Wrap"/></Border>
         </StackPanel>
         <StackPanel DockPanel.Dock="Top">
-          <Button Style="{StaticResource NavButton}" Tag="Dashboard" Click="Navigate_Click" Content="⌂   Dashboard" ToolTip="Recorder health and recent input overview"/>
-          <Button Style="{StaticResource NavButton}" Tag="Live" Click="Navigate_Click" Content="●   Live recording" ToolTip="Choose local logging and rolling history preferences"/>
-          <Button Style="{StaticResource NavButton}" Tag="Aircraft" Click="Navigate_Click" Content="✈   Aircraft profiles" ToolTip="Set a local name for aircraft-specific tracking"/>
-          <Button Style="{StaticResource NavButton}" Tag="Tables" Click="Navigate_Click" Content="▤   Telemetry tables" ToolTip="Inspect frames and switch values from a loaded dump"/>
-          <Button Style="{StaticResource NavButton}" Tag="Settings" Click="Navigate_Click" Content="⚙   Settings" ToolTip="Find simulator folders, change theme, and set export paths"/>
+          <Button x:Name="DashboardNav" Style="{StaticResource NavButton}" Tag="Dashboard" Click="Navigate_Click" Content="⌂   Dashboard" ToolTip="Recorder health and recent input overview"/>
+          <Button x:Name="LiveNav" Style="{StaticResource NavButton}" Tag="Live" Click="Navigate_Click" Content="●   Live recording" ToolTip="Choose local logging and rolling history preferences"/>
+          <Button x:Name="AircraftNav" Style="{StaticResource NavButton}" Tag="Aircraft" Click="Navigate_Click" Content="✈   Aircraft profiles" ToolTip="Set a local name for aircraft-specific tracking"/>
+          <Button x:Name="TablesNav" Style="{StaticResource NavButton}" Tag="Tables" Click="Navigate_Click" Content="▤   Telemetry tables" ToolTip="Inspect frames and switch values from a loaded dump"/>
+          <Button x:Name="SettingsNav" Style="{StaticResource NavButton}" Tag="Settings" Click="Navigate_Click" Content="⚙   Settings" ToolTip="Find simulator folders, change theme, and set export paths"/>
         </StackPanel>
-        <TextBlock DockPanel.Dock="Bottom" Margin="18" Foreground="{StaticResource Muted}" FontSize="11" Text="v0.2 • Local-first diagnostics"/>
+        <TextBlock x:Name="SidebarVersion" DockPanel.Dock="Bottom" Margin="18" Foreground="{DynamicResource Muted}" FontSize="11" Text="v0.2 • Local-first diagnostics"/>
       </DockPanel>
     </Border>
-    <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="{DynamicResource Border}" ShowsPreview="True"/>
+    <GridSplitter x:Name="SidebarSplitter" Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="{DynamicResource Border}" ShowsPreview="True"/>
     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,18,0" Panel.ZIndex="20">
       <Button Width="36" Height="28" Padding="0" Margin="2" Content="—" ToolTip="Keep Blackbox running in the system tray" Click="Minimize_Click"/>
       <Button Width="36" Height="28" Padding="0" Margin="2" Content="▢" ToolTip="Restore or maximize" Click="ToggleMaximize_Click"/>
@@ -36,29 +38,57 @@
     </StackPanel>
     <Grid Grid.Column="2" Margin="30">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-      <Grid Margin="0,0,0,24">
-        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-        <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+      <Grid Margin="0,0,0,20">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,130,14">
           <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="29" FontWeight="SemiBold"/>
           <TextBlock x:Name="PageSubtitle" Foreground="{DynamicResource Muted}" Text="Review recent inputs and recorder health." TextWrapping="Wrap"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,130,0">
+        <WrapPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,0,130,0">
           <Button Content="Open telemetry dump" Click="OpenDump_Click" ToolTip="Load a saved crash telemetry JSON file"/>
           <Button Content="Export developer bundle" Click="ExportBundle_Click" ToolTip="Package the loaded telemetry for a developer; local paths are excluded"/>
+          <Button Content="Copy diagnostics" Click="CopyDiagnostics_Click" ToolTip="Copy status and the selected input frame as JSON without local paths"/>
           <Button Content="Refresh" Click="Refresh_Click" ToolTip="Refresh recorder status and discovered folders"/>
-        </StackPanel>
+          <TextBlock x:Name="ActionFeedback" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+        </WrapPanel>
       </Grid>
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid>
           <Grid x:Name="DashboardView">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <UniformGrid Rows="1" Columns="3" Margin="0,0,0,18">
-              <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="SIMCONNECT" Foreground="{StaticResource Muted}" FontSize="11"/><TextBlock x:Name="ConnectionCard" Text="Recorder not running" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,2"/><TextBlock x:Name="ConnectionDetail" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel></Border>
-              <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="LOGGING" Foreground="{StaticResource Muted}" FontSize="11"/><TextBlock x:Name="LoggingCard" Text="Enabled" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,2"/><TextBlock Text="60-second ring buffer" Foreground="{StaticResource Muted}"/></StackPanel></Border>
+            <UniformGrid x:Name="DashboardCards" Rows="1" Columns="3" Margin="0,0,0,18">
+              <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="SIMCONNECT" Foreground="{DynamicResource Muted}" FontSize="11"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,2"><Ellipse x:Name="HeartbeatDot" Width="12" Height="12" Fill="{DynamicResource StatusWarning}" VerticalAlignment="Center" Margin="0,0,9,0"/><TextBlock x:Name="ConnectionCard" Text="Recorder not running" Foreground="{DynamicResource StatusWarning}" FontSize="18" FontWeight="SemiBold"/></StackPanel>
+                <TextBlock x:Name="ConnectionDetail" Foreground="{DynamicResource Muted}" TextWrapping="Wrap"/>
+                <TextBlock x:Name="HeartbeatChecked" Foreground="{DynamicResource Muted}" FontSize="11" Margin="0,8,0,0" Text="Checking recorder…"/>
+              </StackPanel></Border>
+              <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="LOGGING" Foreground="{DynamicResource Muted}" FontSize="11"/><TextBlock x:Name="LoggingCard" Text="Enabled" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,2"/><TextBlock x:Name="LoggingDetail" Text="Rolling history" Foreground="{DynamicResource Muted}"/></StackPanel></Border>
               <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="ACTIVE PROFILE" Foreground="{StaticResource Muted}" FontSize="11"/><TextBlock x:Name="ProfileCard" Text="Default / all aircraft" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,2"/><TextBlock Text="Per-aircraft rules available" Foreground="{StaticResource Muted}"/></StackPanel></Border>
             </UniformGrid>
-            <Border Grid.Row="1" Style="{StaticResource Card}" Height="280"><StackPanel><DockPanel><TextBlock Text="Input timeline" FontSize="17" FontWeight="SemiBold" DockPanel.Dock="Left"/><StackPanel Orientation="Horizontal" DockPanel.Dock="Right"><TextBlock Text="● Yoke" Foreground="#52A8FF" Margin="6,0"/><TextBlock Text="● Rudder" Foreground="#D6A74A" Margin="6,0"/><TextBlock Text="● Throttle" Foreground="#FA746C" Margin="6,0"/></StackPanel></DockPanel><Grid Margin="0,18,0,0"><Line X1="0" X2="1000" Y1="75" Y2="75" Stroke="#26394B"/><TextBlock Text="Open a telemetry dump to plot the final 60 seconds of inputs." Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></StackPanel></Border>
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,18,0,0"><StackPanel><TextBlock Text="Quick actions" FontSize="17" FontWeight="SemiBold"/><WrapPanel Margin="0,16,0,0"><Button Content="Open crash dump" Click="OpenDump_Click"/><Button Content="Mark live event + export" Click="MarkEvent_Click" ToolTip="Timestamp the current live session and save its buffered inputs to a developer ZIP"/><Button Content="Configure logging" Tag="Live" Click="Navigate_Click"/><Button Content="Set Community folders" Tag="Settings" Click="Navigate_Click"/></WrapPanel></StackPanel></Border>
+            <Border x:Name="TimelineCard" Grid.Row="1" Style="{StaticResource Card}" Height="380">
+              <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel><TextBlock x:Name="TimelineTitle" Text="Input timeline" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                  <WrapPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                    <TextBlock Text="● Yoke X" Foreground="#52A8FF" Margin="6,0" VerticalAlignment="Center"/><TextBlock Text="● Yoke Y" Foreground="#AC8EFF" Margin="6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="● Rudder" Foreground="#E3AC48" Margin="6,0" VerticalAlignment="Center"/><TextBlock Text="● Throttle" Foreground="#FA746C" Margin="6,0" VerticalAlignment="Center"/>
+                    <Button x:Name="LiveViewToggle" Content="Live View: Off" Click="LiveViewToggle_Click" ToolTip="Plot recent input samples automatically while the external recorder is connected" Margin="14,0,6,0"/>
+                    <Button x:Name="FocusTimelineButton" Content="Expand" Click="FocusTimeline_Click" ToolTip="Give the input timeline most of the window" Margin="0"/>
+                  </WrapPanel>
+                </StackPanel>
+                <Grid Grid.Row="1" Margin="0,18,0,0">
+                  <Border Height="1" Background="{DynamicResource Border}" VerticalAlignment="Center"/>
+                  <Canvas x:Name="TimelineCanvas" ClipToBounds="True" Background="Transparent" SizeChanged="TimelineCanvas_SizeChanged">
+                    <Polyline x:Name="YokeXLine" Stroke="#52A8FF" StrokeThickness="2"/>
+                    <Polyline x:Name="YokeYLine" Stroke="#AC8EFF" StrokeThickness="2"/>
+                    <Polyline x:Name="RudderLine" Stroke="#E3AC48" StrokeThickness="2"/>
+                    <Polyline x:Name="ThrottleLine" Stroke="#FA746C" StrokeThickness="2"/>
+                  </Canvas>
+                  <TextBlock x:Name="TimelineEmptyOverlay" Text="Open a telemetry dump to plot the final 60 seconds of inputs." Foreground="{DynamicResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                </Grid>
+                <TextBlock x:Name="TimelineFootnote" Grid.Row="2" Foreground="{DynamicResource Muted}" FontSize="11" Margin="0,8,0,0" Text="Offline dump view • final 60 seconds"/>
+              </Grid>
+            </Border>
+            <Border x:Name="QuickActionsCard" Grid.Row="2" Style="{StaticResource Card}" Margin="0,18,0,0"><StackPanel><TextBlock Text="Quick actions" FontSize="17" FontWeight="SemiBold"/><WrapPanel Margin="0,16,0,0"><Button Style="{StaticResource QuickActionButton}" Content="Open crash dump" Click="OpenDump_Click"/><Button Style="{StaticResource QuickActionButton}" Content="Mark live event + export" Click="MarkEvent_Click" ToolTip="Timestamp the current live session and save its buffered inputs to a developer ZIP"/><Button Style="{StaticResource QuickActionButton}" Content="Configure logging" Tag="Live" Click="Navigate_Click"/><Button Style="{StaticResource QuickActionButton}" Content="Set Community folders" Tag="Settings" Click="Navigate_Click"/></WrapPanel></StackPanel></Border>
           </Grid>
           <Grid x:Name="LiveView" Visibility="Collapsed"><StackPanel><Border Style="{StaticResource Card}"><StackPanel>
             <TextBlock Text="Live recording" FontSize="20" FontWeight="SemiBold"/>
