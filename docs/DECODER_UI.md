@@ -40,6 +40,10 @@ The viewer is an offline decoder. It does not infer a root cause or claim that a
 
 The WPF shell requests the Windows 11 dark title bar and rounded-window preference from DWM when the operating system supports it. The app still runs with its ordinary WPF fallback on older Windows versions.
 
+## Theme and readability
+
+Settings includes an **Appearance** selector with **System**, **Light**, and **Dark** modes. System mode reads the current Windows app-theme preference each time the decoder launches; Light and Dark are explicit local overrides. The app uses custom theme-aware checkbox and dropdown templates so recording controls remain readable instead of falling back to the bright default WPF control theme.
+
 ## Options and status
 
 The larger dashboard has a right-hand Options panel:
