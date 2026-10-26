@@ -14,7 +14,7 @@ Or launch it with no argument and select a file. The viewer rejects unrecognized
 
 - **Dashboard** — SimConnect state, logging state, selected profile, timeline area, and quick actions.
 - **Live recording** — local preferences for recording enablement, dump retention, history length, and sample rate. The SDK-enabled recorder reads them at startup; restart it after changes. They do not reconfigure the simulator.
-- **Aircraft profiles** — a local profile name and optional user-entered aircraft title. The title is labeled as user-entered in exports; automatic aircraft identification still requires a validated SimConnect data request.
+- **Aircraft profiles** — a local profile name and optional user-entered aircraft title. The SDK-enabled recorder contains a separate title/airspeed/altitude request, but it still requires target-SDK and simulator validation. The entered title is labeled as user-entered when used as a fallback.
 - **Telemetry tables** — a classic debugger-style table navigator in the upper-left, with raw input frames on the right.
 - **Settings** — persistent MSFS 2020/2024 Community-folder choices and detected candidates.
 
