@@ -1,5 +1,6 @@
 bin/
 obj/
+artifacts/
 .vs/
 .vscode/
 *.user
@@ -11,4 +12,3 @@ crash_telemetry_dump.json
 **/Packages/
 **/Community/
 **/Official/
-
