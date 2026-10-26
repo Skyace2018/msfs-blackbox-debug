@@ -8,7 +8,7 @@ An experimental, low-overhead flight-input recorder for Microsoft Flight Simulat
 
 - `src/WASM_Hook` — MSFS gauge/WASM sender boundary.
 - `src/External_Recorder` — .NET 8 monitor, ring buffer, JSON dumper, and synthetic self-test.
-- `src/Crash_Decoder` — Windows desktop viewer for validating and exploring saved JSON dumps.
+- `src/Crash_Decoder` — Windows 11–styled WPF dashboard for live status, local simulator settings, and saved JSON dumps.
 - `docs/PROTOCOL.md` — binary contract and ownership assumptions.
 - `docs/LIVE_TEST_PLAN.md` — Windows/MSFS validation procedure.
 
@@ -26,7 +26,7 @@ The command proves frame layout validation, wraparound behavior, ordered snapsho
 dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 ```
 
-The larger viewer dashboard plots control inputs, shows raw frames and switch words, validates the dump schema before display, and has an Options panel that discovers or stores MSFS 2020/2024 Community-folder locations. See [decoder details](docs/DECODER_UI.md).
+The Windows 11–styled viewer dashboard has a branded debugger-style layout: always-visible navigation and settings, telemetry tables, aircraft profiles, logging preferences, and Community-folder discovery. It validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
 ## Compiling the live SimConnect boundary
 
