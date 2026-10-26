@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     private TrayFlyout? _trayFlyout;
     private Guid? _pendingEventId;
     private string _captureMessage = "";
+    private string? _lastLoggedConnectionState;
 
     public MainWindow(string? initialDumpPath)
     {
@@ -190,10 +191,14 @@ public partial class MainWindow : Window
 
     private void ExportBundle_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetDump(out var dump)) return;
         var dialog = CreateSaveDialog("Developer export (*.zip)|*.zip", "msfs-blackbox-developer-export.zip");
         if (dialog.ShowDialog(this) != true) return;
-        try { DeveloperExport.CreateBundle(dialog.FileName, dump, dump.Frames); }
+        try
+        {
+            if (_loadedDump is { } dump) DeveloperExport.CreateBundle(dialog.FileName, dump, dump.Frames);
+            else DeveloperExport.CreateDiagnosticsBundle(dialog.FileName, MonitorStatusReader.Read());
+            DiagnosticLog.Write("viewer_developer_export_created");
+        }
         catch (Exception ex) when (ex is IOException or InvalidDataException) { ShowExportError(ex); }
     }
 
@@ -373,6 +378,11 @@ public partial class MainWindow : Window
             { _captureMessage = "Could not read the event export result: " + ex.Message; }
         }
         var state = status.State.ToLowerInvariant();
+        if (_lastLoggedConnectionState != state)
+        {
+            DiagnosticLog.Write("recorder_state_" + state);
+            _lastLoggedConnectionState = state;
+        }
         var statusBrush = state switch { "connected" => "StatusConnected", "disconnected" or "error" => "StatusError", _ => "StatusWarning" };
         ConnectionCard.SetResourceReference(TextBlock.ForegroundProperty, statusBrush);
         SidebarStatus.SetResourceReference(TextBlock.ForegroundProperty, statusBrush);
