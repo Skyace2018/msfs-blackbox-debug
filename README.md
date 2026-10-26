@@ -43,6 +43,8 @@ dotnet build src/External_Recorder -p:SimConnectInteropPath="C:\path\to\Microsof
 
 `SimConnectMonitor` registers the packed frame and handles client-data / quit / exception callbacks. A Windows message-loop host now dispatches callbacks, fills the ring buffer, publishes live status, and processes event markers. This code path has **not** been compiled against the target SDK or tested in MSFS 2024. The specified SDK DLL is copied only to local build output for execution; it is ignored by Git and is not committed.
 
+On the Windows PC with the simulator and SDK, run `powershell -NoProfile -File scripts\Test-LivePrerequisites.ps1 -SimConnectDll "C:\path\to\Microsoft.FlightSimulator.SimConnect.dll"` before the [live test plan](docs/LIVE_TEST_PLAN.md). The preflight script only checks prerequisites and compiles the recorder; it does not install a package or launch MSFS.
+
 ## Building the WASM hook
 
 Use the MSFS 2024 SDK toolchain and package layout configured on the target Windows machine. `src/WASM_Hook/Makefile` intentionally requires `MSFS_SDK` and `MSFS_WASM_SIMCONNECT_SUPPORTED=1`; it fails closed rather than pretending that the desktop SimConnect import library is usable by a gauge WASM module.
