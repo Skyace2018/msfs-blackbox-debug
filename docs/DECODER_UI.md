@@ -18,7 +18,9 @@ Or launch it with no argument and select a file. The viewer rejects unrecognized
 - **Telemetry tables** — a classic debugger-style table navigator in the upper-left, with raw input frames on the right.
 - **Settings** — persistent MSFS 2020/2024 Community-folder choices and detected candidates.
 
-The navigation rail and the telemetry-table rail both have draggable splitters, and the main window has ordinary Windows move/resize controls.
+The navigation rail and the telemetry-table rail both have draggable splitters, and the main window has ordinary Windows move/resize controls. Use the menu button in the left rail to collapse it to labeled icon tooltips. **Expand** gives the input timeline most of the window, and **Exit full view** returns to the dashboard cards.
+
+The SimConnect card uses green for confirmed incoming frames, orange while stopped or connecting, and red for disconnect/error. Its pulsing dot and last-check time show that the viewer is polling the local recorder status every two seconds; the pulse does not prove a simulator connection. The chart's **Live View** toggle displays recent inputs automatically when the external recorder is connected and publishing frames. This local display feed is limited to 240 points sampled at up to 4 Hz (about 60 seconds). It is separate from the full-rate rolling evidence buffer. With Live View off, an opened dump plots its final 60 seconds.
 
 ## Tray controls
 
@@ -35,6 +37,9 @@ With a dump open, the tool can create three local artifacts at a location chosen
 - **Snapshot** writes the selected frame (or the final frame if none is selected) to a small JSON file.
 - **Export last 10s** writes the last ten seconds of the loaded dump to a ZIP.
 - **Export developer bundle** writes the entire loaded dump to a ZIP.
+- **Copy diagnostics** copies a small JSON snippet with recorder status, optional dump metadata, and the selected or latest input to the clipboard. It excludes configured local paths. Review it before pasting into an issue or chat.
+
+Dashboard quick actions use outlined blue buttons for visibility. **Mark live event + export** still requires a confirmed live recorder session.
 
 Bundles contain `telemetry.json`, a machine-readable `manifest.json`, and a short README. They intentionally exclude local Community-folder paths, settings, simulator binaries, and unrelated files. Review the selected telemetry before sharing it.
 
