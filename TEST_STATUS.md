@@ -7,7 +7,7 @@ Date: 2026-10-25
 | Repository static validation | VERIFIED | C++/C# frame contract is documented as 36 bytes; source contains matching packed layouts and assertions. Secret-pattern scan found no credential-bearing files. |
 | .NET recorder build | VERIFIED | `dotnet build src/External_Recorder/External_Recorder.csproj --no-restore` succeeded with 0 warnings on .NET SDK 10.0.401, targeting .NET 8. |
 | .NET recorder synthetic self-test | VERIFIED | `dotnet run --project src/External_Recorder --no-build -- --self-test` passed: 36-byte layout, three newest frames retained in order, and JSON dump emitted with telemetry fields. |
-| Decoder UI build / parser self-test | VERIFIED | The expanded Windows Forms dashboard compiled and its `--self-test` parsed a synthetic v1 telemetry dump plus an `InstalledPackagesPath` value from synthetic `UserCfg.opt` text. |
+| Decoder UI build / parser self-test | VERIFIED | The decoder was migrated to a WPF Windows 11–styled dashboard and built successfully to a separate output folder because an older running executable held the default output lock. Its `--self-test` passed against synthetic telemetry and `UserCfg.opt` data. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
 | MSFS SDK WASM compile | BLOCKED | No MSFS SDK/toolchain was available in this environment. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
