@@ -14,10 +14,11 @@ Date: 2026-10-25
 | System / Light / Dark theme selector | VERIFIED | The decoder builds with 0 warnings and passed a 10-second launch smoke test after adding persistent theme preferences and theme-aware WPF checkbox/dropdown controls. |
 | Tray UI, dropdown layout, and executable icon | VERIFIED | The updated decoder built with 0 warnings and errors. Its synthetic self-test exited successfully. A local window smoke test obtained a nonzero main-window handle; a Windows minimize command left the process running and hid the main window. The generated executable contained a 32×32 embedded icon. The tray popup and dropdowns still need hands-on visual confirmation on the target desktop. |
 | Event marker and developer ZIP (synthetic) | VERIFIED | The recorder builds with 0 warnings and its self-test creates an event ZIP. The test checks the marker time, last input frame, captured-variable list, optional aircraft label, and one-hour recording preferences. The WPF viewer builds with 0 warnings and its decoder self-test passes. |
-| Live tray values and event marking in MSFS | UNKNOWN | The SDK-enabled host and tray request path are implemented but have not been compiled against the user's MSFS SDK or exercised with live simulator frames. Aircraft identity is user-entered until a validated SimConnect request is added. |
+| Live tray values and event marking in MSFS | UNKNOWN | The SDK-enabled host, aircraft-state request, and tray request path are implemented but have not been compiled against the user's MSFS SDK or exercised with live simulator frames. User-entered aircraft title remains a fallback. |
 | SDK-enabled C# recorder host compile | BLOCKED | The official managed SimConnect DLL is not available in this workspace. The simulator-free target builds; SDK-specific interop signatures and the Windows message loop still require a target-SDK build. |
+| Managed-interoperability compile probe | VERIFIED | The SDK-only C# source compiled against a local test double shaped like the documented managed API. This checks conditional C# syntax and host wiring only; the test double is ignored by Git and is not the official SDK. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
-| MSFS SDK WASM compile | BLOCKED | No MSFS SDK/toolchain was available in this environment. |
+| MSFS SDK WASM compile | BLOCKED | The user confirmed that this PC does not have the simulator or SDK. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
 | Crash / disconnect behavior in MSFS | UNKNOWN | Must be exercised using the procedure in `docs/LIVE_TEST_PLAN.md`. |
 
