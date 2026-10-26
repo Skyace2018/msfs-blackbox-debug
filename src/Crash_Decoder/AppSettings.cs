@@ -35,7 +35,7 @@ internal static class SettingsStore
     public static void Save(AppSettings settings)
     {
         Directory.CreateDirectory(DirectoryPath);
-        var temporaryPath = SettingsPath + ".tmp";
+        var temporaryPath = SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
         File.Move(temporaryPath, SettingsPath, true);
     }
