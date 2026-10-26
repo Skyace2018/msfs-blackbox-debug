@@ -13,8 +13,8 @@ Or launch it with no argument and select a file. The viewer rejects unrecognized
 ## Pages and controls
 
 - **Dashboard** — SimConnect state, logging state, selected profile, timeline area, and quick actions.
-- **Live recording** — local preferences for recording enablement, dump retention, history length, and sample rate. These are preferences until the external monitor is connected; they do not claim to reconfigure a running simulator.
-- **Aircraft profiles** — a local profile name and an optional future aircraft-title binding. A live SimConnect session must supply aircraft identity before per-aircraft rules are applied.
+- **Live recording** — local preferences for recording enablement, dump retention, history length, and sample rate. The SDK-enabled recorder reads them at startup; restart it after changes. They do not reconfigure the simulator.
+- **Aircraft profiles** — a local profile name and optional user-entered aircraft title. The title is labeled as user-entered in exports; automatic aircraft identification still requires a validated SimConnect data request.
 - **Telemetry tables** — a classic debugger-style table navigator in the upper-left, with raw input frames on the right.
 - **Settings** — persistent MSFS 2020/2024 Community-folder choices and detected candidates.
 
@@ -22,7 +22,9 @@ The navigation rail and the telemetry-table rail both have draggable splitters, 
 
 ## Tray controls
 
-Minimize the main window with either its title-bar control or the dashboard control to keep the viewer running in the Windows notification area. Click the Blackbox tray icon for a compact panel with recorder status and three actions: **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the tray icon to restore the maximized dashboard. Closing the main window exits the viewer and removes its tray icon. Tray mode does not start the external recorder on its own.
+Minimize the main window with either its title-bar control or the dashboard control to keep the viewer running in the Windows notification area. Click the Blackbox tray icon for a compact live dashboard with connection state, latest input values, rolling-buffer use, and aircraft information. It offers **Mark event + export**, **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the tray icon to restore the maximized dashboard. Closing the main window exits the viewer and removes its tray icon. Tray mode does not start the external recorder on its own.
+
+The event button is enabled only while a fresh recorder heartbeat includes actual input frames. It creates a timestamped developer ZIP in the configured export folder. If no folder is configured, the first mark opens a folder chooser. The panel reports whether the recorder confirmed the export. See [event capture](EVENT_CAPTURE.md) for ZIP contents and limits.
 
 The executable icon is generated during build from the app's blue tile and white four-point mark. Controls on the navigation rail, recording page, settings page, toolbar, and tray panel have short tooltips.
 
@@ -40,7 +42,7 @@ Bundles contain `telemetry.json`, a machine-readable `manifest.json`, and a shor
 
 The retention selector now supports up to one hour. The dashboard estimates its planned frame capacity from retention × sample rate. During a real monitor session, the live status contract can supply the actual count/capacity; the UI warns at 90%, and the recorder ring buffer raises a one-time 90% capacity event. At full capacity it remains a rolling buffer, overwriting the oldest frames rather than stopping capture.
 
-The viewer is an offline decoder. It does not infer a root cause or claim that a control movement caused a simulator crash.
+The viewer reads saved dumps and the external recorder's local live status. The external recorder owns the telemetry buffer and event exports. Neither component infers a root cause or claims that a control movement caused a simulator crash.
 
 ## Windows 11 presentation
 
