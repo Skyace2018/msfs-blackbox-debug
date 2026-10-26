@@ -11,12 +11,20 @@ internal static class MonitorStatusStore
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MSFS-Input-Blackbox");
     private static readonly string StatusPath = Path.Combine(DirectoryPath, "monitor-status.json");
 
-    public static void Report(string state, string detail, uint? lastFrameTimestamp = null)
+    public static void Report(string state, string detail, uint? lastFrameTimestamp = null,
+        TelemetryFrame? latestInput = null, int? bufferedFrames = null, int? bufferCapacity = null,
+        Guid? sessionId = null, string? aircraftType = null, DateTimeOffset? lastFrameReceivedAtUtc = null)
     {
         try
         {
             Directory.CreateDirectory(DirectoryPath);
-            var body = JsonSerializer.Serialize(new { State = state, Detail = detail, UpdatedAtUtc = DateTimeOffset.UtcNow, LastFrameTimestamp = lastFrameTimestamp });
+            var body = JsonSerializer.Serialize(new
+            {
+                State = state, Detail = detail, UpdatedAtUtc = DateTimeOffset.UtcNow,
+                LastFrameTimestamp = lastFrameTimestamp, LatestInput = latestInput,
+                BufferedFrames = bufferedFrames, BufferCapacity = bufferCapacity,
+                SessionId = sessionId, AircraftType = aircraftType, LastFrameReceivedAtUtc = lastFrameReceivedAtUtc
+            }, new JsonSerializerOptions { IncludeFields = true });
             var temporaryPath = StatusPath + ".tmp";
             File.WriteAllText(temporaryPath, body);
             File.Move(temporaryPath, StatusPath, true);
@@ -25,4 +33,3 @@ internal static class MonitorStatusStore
         catch (UnauthorizedAccessException) { /* The UI will show an unknown/not-running state. */ }
     }
 }
-
