@@ -31,6 +31,8 @@ The Windows 11–styled viewer dashboard has a branded debugger-style layout: re
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
 Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
 
+When a recorder is actively receiving frames, the tray panel shows a fresh live-session heartbeat, the latest yoke/rudder/throttle and switch values, and rolling-buffer use. **Mark event + export** timestamps the event and asks the recorder to save its current buffer as a developer ZIP in the folder chosen under **Settings → Developer handoff**. The first mark prompts for a folder if none is configured. See [event capture](docs/EVENT_CAPTURE.md) for the exact fields and limits.
+
 ## Compiling the live SimConnect boundary
 
 Install the official `Microsoft.FlightSimulator.SimConnect.dll` from the MSFS SDK, then pass its path explicitly:
@@ -39,7 +41,7 @@ Install the official `Microsoft.FlightSimulator.SimConnect.dll` from the MSFS SD
 dotnet build src/External_Recorder -p:SimConnectInteropPath="C:\path\to\Microsoft.FlightSimulator.SimConnect.dll" -p:EnableSimConnect=true
 ```
 
-`SimConnectMonitor` registers the packed frame and handles client-data / quit / exception callbacks. A Windows message-loop host must dispatch its chosen SimConnect message ID to `ReceiveMessage`; this final host wiring remains a live-integration task until the target SDK is tested. No SDK DLL is committed to this repository.
+`SimConnectMonitor` registers the packed frame and handles client-data / quit / exception callbacks. A Windows message-loop host now dispatches callbacks, fills the ring buffer, publishes live status, and processes event markers. This code path has **not** been compiled against the target SDK or tested in MSFS 2024. The specified SDK DLL is copied only to local build output for execution; it is ignored by Git and is not committed.
 
 ## Building the WASM hook
 
