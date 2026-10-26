@@ -34,9 +34,16 @@ Pass criterion: dump creation is deterministic, the process exits safely, and no
 
 ## 4. Host message-loop check — UNKNOWN until run
 
-The managed interop delivers callbacks through a Windows message loop. Use a minimal host window, pass its handle and custom message ID to `SimConnectMonitor`, and call `ReceiveMessage` for that message. Verify that a Client Data callback enters the ring buffer before testing timeout logic.
+The managed interop delivers callbacks through a Windows message loop. The conditional `LiveRecorderHost` now provides a hidden native window, dispatches its custom message ID to `ReceiveMessage`, and adds callbacks to the ring buffer. Build it with the target SDK and verify that a Client Data callback enters the ring buffer before testing timeout logic.
+
+## 5. Tray dashboard and event marker — UNKNOWN until run
+
+1. With the recorder receiving live frames, minimize the viewer to the tray and open the compact dashboard.
+2. Verify the connection heartbeat remains fresh, the input values change with real controls, and the buffer count advances. Confirm a stopped recorder changes to an unconfirmed state after the heartbeat expires.
+3. Enter the actual aircraft title under **Aircraft profiles**, choose a developer-export folder, and select **Mark event + export** while changing a control.
+4. Confirm exactly one new ZIP appears, the tray reports its path, and the ZIP contains `telemetry.json`, `event.json`, `manifest.json`, and `README.txt`. Compare the UTC marker, frame range, last inputs, and user-entered aircraft label with the observed session. Do not treat the label as simulator-verified.
+5. Repeat after disconnect; the button should be disabled and an old request must not export frames from a new session.
 
 ## Reporting rules
 
 Use **VERIFIED** only with command output or saved artifacts from the exact test run. Use **BLOCKED** for missing SDK/simulator prerequisites and **UNKNOWN** for unexecuted behavior. Preserve no personal flight data in public issue attachments.
-
