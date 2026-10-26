@@ -37,6 +37,7 @@ internal static class LiveRecorderHost
         private bool _hasReceivedFrame;
         private bool _ending;
         private uint? _lastAcceptedTimestamp;
+        private AircraftState? _aircraftState;
 
         public RecorderContext()
         {
@@ -47,6 +48,7 @@ internal static class LiveRecorderHost
             _monitor = new SimConnectMonitor(_window.Handle, SimConnectMessage);
             _window.ReceiveMessage = _monitor.ReceiveMessage;
             _monitor.FrameReceived += OnFrame;
+            _monitor.AircraftStateReceived += OnAircraftState;
             _monitor.Disconnected += OnDisconnected;
             _timer = new System.Windows.Forms.Timer { Interval = 250 };
             _timer.Tick += (_, _) => Tick();
@@ -66,6 +68,12 @@ internal static class LiveRecorderHost
             _hasReceivedFrame = true;
         }
 
+        private void OnAircraftState(AircraftState state)
+        {
+            _aircraftState = state;
+            _capture.SetAircraftState(state);
+        }
+
         private void Tick()
         {
             try { _capture.ProcessRequests(); }
@@ -80,11 +88,13 @@ internal static class LiveRecorderHost
             if (now - _lastReportUtc < TimeSpan.FromSeconds(2)) return;
             _lastReportUtc = now;
             var latest = _capture.Latest;
+            var aircraft = _aircraftState;
             MonitorStatusStore.Report(_hasReceivedFrame ? "connected" : "connecting",
                 _hasReceivedFrame ? "Receiving live telemetry frames." :
                     _preferences.LoggingEnabled ? "Waiting for the first telemetry frame." : "Input logging is disabled in viewer settings.",
                 latest?.Timestamp, latest, _capture.Count, _capture.Capacity, _capture.SessionId,
-                lastFrameReceivedAtUtc: _hasReceivedFrame ? _lastFrameUtc : null);
+                aircraftType: aircraft?.Title, lastFrameReceivedAtUtc: _hasReceivedFrame ? _lastFrameUtc : null,
+                indicatedAirspeedKnots: aircraft?.IndicatedAirspeedKnots, altitudeFeet: aircraft?.AltitudeFeet);
         }
 
         private void OnDisconnected(string reason) => EndSession(reason);
