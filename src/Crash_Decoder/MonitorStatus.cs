@@ -12,6 +12,10 @@ internal sealed class MonitorStatus
     public int? BufferedFrames { get; init; }
     public int? BufferCapacity { get; init; }
     public bool IsPurging { get; init; }
+    public Guid? SessionId { get; init; }
+    public string? AircraftType { get; init; }
+    public TelemetrySample? LatestInput { get; init; }
+    public DateTimeOffset? LastFrameReceivedAtUtc { get; init; }
 }
 
 internal static class MonitorStatusReader
@@ -25,10 +29,16 @@ internal static class MonitorStatusReader
         {
             if (!File.Exists(StatusPath)) return new MonitorStatus();
             var status = JsonSerializer.Deserialize<MonitorStatus>(File.ReadAllText(StatusPath));
-            return status ?? new MonitorStatus { State = "unknown", Detail = "The status file is empty or invalid." };
+            if (status is null) return new MonitorStatus { State = "unknown", Detail = "The status file is empty or invalid." };
+            if ((status.State is "connected" or "connecting") && DateTimeOffset.UtcNow - status.UpdatedAtUtc > TimeSpan.FromSeconds(6))
+                return new MonitorStatus { State = "unknown", Detail = "Recorder heartbeat expired; live session cannot be confirmed." };
+            if (status.State == "connected" && (status.LastFrameReceivedAtUtc is not { } lastFrame ||
+                DateTimeOffset.UtcNow - lastFrame > TimeSpan.FromSeconds(3)))
+                return new MonitorStatus { State = "unknown", Detail = "Telemetry frames have stopped; live input cannot be confirmed." };
+            return status;
         }
         catch (IOException) { return new MonitorStatus { State = "unknown", Detail = "Recorder status is being updated." }; }
+        catch (UnauthorizedAccessException) { return new MonitorStatus { State = "unknown", Detail = "Recorder status is not readable." }; }
         catch (JsonException) { return new MonitorStatus { State = "unknown", Detail = "Recorder status cannot be decoded." }; }
     }
 }
-
