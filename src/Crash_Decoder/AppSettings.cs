@@ -14,6 +14,7 @@ internal sealed class AppSettings
     public string AircraftProfileName { get; set; } = "Default / all aircraft";
     public string? SessionLogPath { get; set; }
     public string? ExportFolder { get; set; }
+    public string ThemeMode { get; set; } = "System";
 }
 
 internal static class SettingsStore
