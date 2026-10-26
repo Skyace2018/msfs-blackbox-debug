@@ -29,13 +29,13 @@ dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 The Windows 11–styled viewer dashboard has a branded debugger-style layout: resizable navigation/table rails, telemetry tables, aircraft profiles, logging preferences, developer export/snapshot tools, and Community-folder discovery. It validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
+Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
 
 ## Compiling the live SimConnect boundary
 
 Install the official `Microsoft.FlightSimulator.SimConnect.dll` from the MSFS SDK, then pass its path explicitly:
 
 ```powershell
-dotnet build src/External_Recorder -p:SimConnectInteropPath="C:\path\to\Microsoft.FlightSimulator.SimConnect.dll" -p:EnableSimConnect=true
 dotnet build src/External_Recorder -p:SimConnectInteropPath="C:\path\to\Microsoft.FlightSimulator.SimConnect.dll" -p:EnableSimConnect=true
 ```
 
@@ -52,4 +52,3 @@ The program records only telemetry defined in `TelemetryFrame`. Do not add accou
 ## Contributing
 
 Keep the packed binary frame synchronized in C++ and C#. Any layout change requires updates to `docs/PROTOCOL.md`, the synthetic test, and a live-integration revalidation.
-
