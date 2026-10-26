@@ -6,7 +6,11 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>$(MSBuildProjectDirectory)\obj\Blackbox.ico</ApplicationIcon>
   </PropertyGroup>
+  <Target Name="GenerateBlackboxIcon" BeforeTargets="CoreCompile">
+    <Exec Command="powershell -NoProfile -File &quot;$(MSBuildProjectDirectory)\Assets\GenerateBlackboxIcon.ps1&quot; &quot;$(MSBuildProjectDirectory)\obj\Blackbox.ico&quot;" />
+  </Target>
   <ItemGroup>
     <!-- Retained temporarily for source-history reference; the WPF shell replaces these WinForms views. -->
     <Compile Remove="DecoderForm.cs" />
@@ -14,4 +18,3 @@
     <Compile Remove="Program.cs" />
   </ItemGroup>
 </Project>
-
