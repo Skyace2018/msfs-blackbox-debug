@@ -1,0 +1,23 @@
+<Window x:Class="MsfsInputBlackbox.Decoder.TrayFlyout"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Blackbox quick controls" Width="320" Height="240" ShowInTaskbar="False"
+        WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True"
+        Background="Transparent" Topmost="True" ShowActivated="True">
+  <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}"
+          BorderThickness="1" CornerRadius="14" Padding="16">
+    <StackPanel>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+        <Border Width="32" Height="32" CornerRadius="9" Background="#1B5E98" Margin="0,0,10,0">
+          <TextBlock Text="✦" Foreground="White" FontSize="19" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <StackPanel VerticalAlignment="Center"><TextBlock Text="BLACKBOX" FontWeight="Bold" Foreground="{DynamicResource Text}"/>
+          <TextBlock Text="Quick controls" Foreground="{DynamicResource Muted}" FontSize="11"/></StackPanel>
+      </StackPanel>
+      <TextBlock x:Name="StatusText" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+      <Button Content="Open full screen" Click="Restore_Click" ToolTip="Show the main Blackbox dashboard maximized" Margin="0,0,0,6"/>
+      <Button Content="Minimize to tray" Click="Minimize_Click" ToolTip="Close this quick panel while Blackbox stays in the tray" Margin="0,0,0,6"/>
+      <Button Content="Exit Blackbox" Click="Exit_Click" ToolTip="Stop the desktop viewer and remove its tray icon" Margin="0"/>
+    </StackPanel>
+  </Border>
+</Window>
