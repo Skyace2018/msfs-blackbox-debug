@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using System.Windows.Media.Animation;
 
 namespace MsfsInputBlackbox.Decoder;
 
@@ -23,6 +24,7 @@ public partial class MainWindow : Window
     public MainWindow(string? initialDumpPath)
     {
         InitializeComponent();
+        InitializeUiEnhancements();
         SourceInitialized += (_, _) => ApplyWindows11Chrome();
         StateChanged += (_, _) => { if (WindowState == WindowState.Minimized) MinimizeToTray(); };
         InitializeTray();
@@ -31,6 +33,7 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _statusTimer.Stop();
+            _previewTimer.Stop();
             _trayFlyout?.Close();
             if (_trayIcon is not null) { _trayIcon.Visible = false; _trayIcon.Dispose(); }
         };
@@ -63,6 +66,7 @@ public partial class MainWindow : Window
     private void Navigate_Click(object sender, RoutedEventArgs e)
     {
         var page = (sender as FrameworkElement)?.Tag?.ToString() ?? "Dashboard";
+        if (_timelineFocused && page != "Dashboard") SetTimelineFocus(false);
         DashboardView.Visibility = page == "Dashboard" ? Visibility.Visible : Visibility.Collapsed;
         LiveView.Visibility = page == "Live" ? Visibility.Visible : Visibility.Collapsed;
         AircraftView.Visibility = page == "Aircraft" ? Visibility.Visible : Visibility.Collapsed;
@@ -77,6 +81,7 @@ public partial class MainWindow : Window
             "Settings" => "Discover or configure local Community folder locations.",
             _ => "Review recent inputs and recorder health."
         };
+        if (page == "Dashboard" && !_isLiveTimeline) ShowDumpTimeline();
     }
 
     private void ThemeMode_Changed(object sender, SelectionChangedEventArgs e)
@@ -243,6 +248,7 @@ public partial class MainWindow : Window
             PageTitle.Text = "Telemetry tables";
             PageSubtitle.Text = Path.GetFileName(path);
             DashboardView.Visibility = Visibility.Collapsed; TablesView.Visibility = Visibility.Visible;
+            if (!_isLiveTimeline) ShowDumpTimeline();
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or KeyNotFoundException)
         {
@@ -330,7 +336,11 @@ public partial class MainWindow : Window
         _settings.AircraftTitle = string.IsNullOrWhiteSpace(AircraftTitle.Text) ? null : AircraftTitle.Text.Trim();
         TrySaveSettings();
     }
-    private void UpdateLoggingCard() => LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds / 60.0:F0} min" : "Disabled";
+    private void UpdateLoggingCard()
+    {
+        LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds / 60.0:F0} min" : "Disabled";
+        LoggingDetail.Text = $"{_settings.HistorySeconds:N0}s rolling history at up to {_settings.SampleRateHz} Hz";
+    }
     private void TrySaveSettings() { try { SettingsStore.Save(_settings); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 
     private void TablesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -363,16 +373,24 @@ public partial class MainWindow : Window
             { _captureMessage = "Could not read the event export result: " + ex.Message; }
         }
         var state = status.State.ToLowerInvariant();
+        var statusBrush = state switch { "connected" => "StatusConnected", "disconnected" or "error" => "StatusError", _ => "StatusWarning" };
+        ConnectionCard.SetResourceReference(TextBlock.ForegroundProperty, statusBrush);
+        SidebarStatus.SetResourceReference(TextBlock.ForegroundProperty, statusBrush);
+        HeartbeatDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, statusBrush);
+        HeartbeatDot.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0.25, TimeSpan.FromSeconds(1.85)));
+        HeartbeatChecked.Text = $"● Polling every 2s • checked {DateTime.Now:HH:mm:ss}";
         SidebarStatus.Text = state switch
         {
             "connected" => "● MSFS CONNECTED\n" + status.Detail,
             "connecting" => "● CONNECTING\n" + status.Detail,
             "disconnected" => "● DISCONNECTED\n" + status.Detail,
+            "error" => "● RECORDER ERROR\n" + status.Detail,
             _ => "● RECORDER NOT RUNNING\n" + status.Detail
         };
-        ConnectionCard.Text = state switch { "connected" => "Connected", "connecting" => "Connecting", "disconnected" => "Disconnected", _ => "Recorder not running" };
+        ConnectionCard.Text = state switch { "connected" => "Connected", "connecting" => "Connecting", "disconnected" => "Disconnected", "error" => "Recorder error", _ => "Recorder not running" };
         ConnectionDetail.Text = status.Detail;
         UpdateCapacity(status);
+        if (ActionFeedback.Text.Length > 0 && DateTimeOffset.UtcNow > _actionFeedbackUntilUtc) ActionFeedback.Text = "";
         if (_trayFlyout?.IsVisible == true) _trayFlyout.UpdateDashboard(status, _captureMessage, _pendingEventId is not null, _settings.AircraftTitle);
     }
 
