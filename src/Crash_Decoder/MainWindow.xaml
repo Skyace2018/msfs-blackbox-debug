@@ -19,27 +19,35 @@
           <Border Margin="0,20,0,2" Padding="10,8" CornerRadius="8" Background="#132536"><TextBlock x:Name="SidebarStatus" Foreground="#8FC9FF" TextWrapping="Wrap"/></Border>
         </StackPanel>
         <StackPanel DockPanel.Dock="Top">
-          <Button Style="{StaticResource NavButton}" Tag="Dashboard" Click="Navigate_Click" Content="⌂   Dashboard"/>
-          <Button Style="{StaticResource NavButton}" Tag="Live" Click="Navigate_Click" Content="●   Live recording"/>
-          <Button Style="{StaticResource NavButton}" Tag="Aircraft" Click="Navigate_Click" Content="✈   Aircraft profiles"/>
-          <Button Style="{StaticResource NavButton}" Tag="Tables" Click="Navigate_Click" Content="▤   Telemetry tables"/>
-          <Button Style="{StaticResource NavButton}" Tag="Settings" Click="Navigate_Click" Content="⚙   Settings"/>
+          <Button Style="{StaticResource NavButton}" Tag="Dashboard" Click="Navigate_Click" Content="⌂   Dashboard" ToolTip="Recorder health and recent input overview"/>
+          <Button Style="{StaticResource NavButton}" Tag="Live" Click="Navigate_Click" Content="●   Live recording" ToolTip="Choose local logging and rolling history preferences"/>
+          <Button Style="{StaticResource NavButton}" Tag="Aircraft" Click="Navigate_Click" Content="✈   Aircraft profiles" ToolTip="Set a local name for aircraft-specific tracking"/>
+          <Button Style="{StaticResource NavButton}" Tag="Tables" Click="Navigate_Click" Content="▤   Telemetry tables" ToolTip="Inspect frames and switch values from a loaded dump"/>
+          <Button Style="{StaticResource NavButton}" Tag="Settings" Click="Navigate_Click" Content="⚙   Settings" ToolTip="Find simulator folders, change theme, and set export paths"/>
         </StackPanel>
         <TextBlock DockPanel.Dock="Bottom" Margin="18" Foreground="{StaticResource Muted}" FontSize="11" Text="v0.2 • Local-first diagnostics"/>
       </DockPanel>
     </Border>
     <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="{DynamicResource Border}" ShowsPreview="True"/>
     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,18,0" Panel.ZIndex="20">
-      <Button Width="36" Height="28" Padding="0" Margin="2" Content="—" ToolTip="Minimize" Click="Minimize_Click"/>
+      <Button Width="36" Height="28" Padding="0" Margin="2" Content="—" ToolTip="Keep Blackbox running in the system tray" Click="Minimize_Click"/>
       <Button Width="36" Height="28" Padding="0" Margin="2" Content="▢" ToolTip="Restore or maximize" Click="ToggleMaximize_Click"/>
       <Button Width="36" Height="28" Padding="0" Margin="2" Content="×" ToolTip="Close" Click="Close_Click"/>
     </StackPanel>
     <Grid Grid.Column="2" Margin="30">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-      <DockPanel Margin="0,0,0,24">
-        <StackPanel DockPanel.Dock="Left"><TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="29" FontWeight="SemiBold"/><TextBlock x:Name="PageSubtitle" Foreground="{StaticResource Muted}" Text="Review recent inputs and recorder health."/></StackPanel>
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="Open telemetry dump" Click="OpenDump_Click"/><Button Content="Export developer bundle" Click="ExportBundle_Click"/><Button Content="Refresh" Click="Refresh_Click"/></StackPanel>
-      </DockPanel>
+      <Grid Margin="0,0,0,24">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+          <TextBlock x:Name="PageTitle" Text="Dashboard" FontSize="29" FontWeight="SemiBold"/>
+          <TextBlock x:Name="PageSubtitle" Foreground="{DynamicResource Muted}" Text="Review recent inputs and recorder health." TextWrapping="Wrap"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,130,0">
+          <Button Content="Open telemetry dump" Click="OpenDump_Click" ToolTip="Load a saved crash telemetry JSON file"/>
+          <Button Content="Export developer bundle" Click="ExportBundle_Click" ToolTip="Package the loaded telemetry for a developer; local paths are excluded"/>
+          <Button Content="Refresh" Click="Refresh_Click" ToolTip="Refresh recorder status and discovered folders"/>
+        </StackPanel>
+      </Grid>
       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid>
           <Grid x:Name="DashboardView">
@@ -52,13 +60,34 @@
             <Border Grid.Row="1" Style="{StaticResource Card}" Height="280"><StackPanel><DockPanel><TextBlock Text="Input timeline" FontSize="17" FontWeight="SemiBold" DockPanel.Dock="Left"/><StackPanel Orientation="Horizontal" DockPanel.Dock="Right"><TextBlock Text="● Yoke" Foreground="#52A8FF" Margin="6,0"/><TextBlock Text="● Rudder" Foreground="#D6A74A" Margin="6,0"/><TextBlock Text="● Throttle" Foreground="#FA746C" Margin="6,0"/></StackPanel></DockPanel><Grid Margin="0,18,0,0"><Line X1="0" X2="1000" Y1="75" Y2="75" Stroke="#26394B"/><TextBlock Text="Open a telemetry dump to plot the final 60 seconds of inputs." Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></StackPanel></Border>
             <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,18,0,0"><StackPanel><TextBlock Text="Quick actions" FontSize="17" FontWeight="SemiBold"/><WrapPanel Margin="0,16,0,0"><Button Content="Open crash dump" Click="OpenDump_Click"/><Button Content="Configure logging" Tag="Live" Click="Navigate_Click"/><Button Content="Set Community folders" Tag="Settings" Click="Navigate_Click"/></WrapPanel></StackPanel></Border>
           </Grid>
-          <Grid x:Name="LiveView" Visibility="Collapsed"><StackPanel><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Live recording" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="These settings are saved locally. Recording begins only when the external SimConnect monitor is connected." Foreground="{StaticResource Muted}" Margin="0,6,0,20"/><CheckBox x:Name="LoggingEnabled" Content="Enable input logging" Checked="LoggingOption_Changed" Unchecked="LoggingOption_Changed"/><CheckBox x:Name="KeepDumps" Content="Write a crash telemetry JSON dump on timeout or disconnect" Checked="LoggingOption_Changed" Unchecked="LoggingOption_Changed" Margin="0,12,0,0"/><StackPanel Orientation="Horizontal" Margin="0,20,0,0"><StackPanel Width="220"><TextBlock Text="History length" Foreground="{StaticResource Muted}"/><ComboBox x:Name="HistorySeconds" SelectionChanged="LoggingOption_Changed"><ComboBoxItem Content="60"/><ComboBoxItem Content="300"/><ComboBoxItem Content="900"/><ComboBoxItem Content="1800"/><ComboBoxItem Content="3600"/></ComboBox></StackPanel><StackPanel Width="220" Margin="18,0,0,0"><TextBlock Text="Sample rate (Hz)" Foreground="{StaticResource Muted}"/><ComboBox x:Name="SampleRate" SelectionChanged="LoggingOption_Changed"><ComboBoxItem Content="15"/><ComboBoxItem Content="30"/><ComboBoxItem Content="60"/></ComboBox></StackPanel></StackPanel><TextBlock x:Name="CapacityText" Text="Buffer capacity: no live session" Foreground="{StaticResource Muted}" Margin="0,24,0,6"/><ProgressBar x:Name="CapacityBar" Height="12" Maximum="100" Value="0"/><TextBlock x:Name="PurgeWarning" Text="At 90% capacity the monitor will warn; at 100% it overwrites the oldest frames in the rolling buffer." Foreground="#D6A74A" Margin="0,8,0,0" TextWrapping="Wrap"/></StackPanel></Border></StackPanel></Grid>
+          <Grid x:Name="LiveView" Visibility="Collapsed"><StackPanel><Border Style="{StaticResource Card}"><StackPanel>
+            <TextBlock Text="Live recording" FontSize="20" FontWeight="SemiBold"/>
+            <TextBlock Text="These settings are saved locally. Recording begins only when the external SimConnect monitor is connected." Foreground="{DynamicResource Muted}" Margin="0,6,0,20" TextWrapping="Wrap"/>
+            <CheckBox x:Name="LoggingEnabled" Content="Enable input logging" Checked="LoggingOption_Changed" Unchecked="LoggingOption_Changed" ToolTip="Save your preference to capture input frames when a supported recorder is connected"/>
+            <CheckBox x:Name="KeepDumps" Content="Write a crash telemetry JSON dump on timeout or disconnect" Checked="LoggingOption_Changed" Unchecked="LoggingOption_Changed" Margin="0,12,0,0" ToolTip="Keep the buffered input history in a JSON file after the recorder detects a disconnect or timeout"/>
+            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+              <StackPanel Width="220"><TextBlock Text="History length (seconds)" Foreground="{DynamicResource Muted}" Margin="0,0,0,6"/>
+                <ComboBox x:Name="HistorySeconds" SelectionChanged="LoggingOption_Changed" ToolTip="Choose the rolling history window: 60 to 3600 seconds"><ComboBoxItem Content="60"/><ComboBoxItem Content="300"/><ComboBoxItem Content="900"/><ComboBoxItem Content="1800"/><ComboBoxItem Content="3600"/></ComboBox>
+              </StackPanel>
+              <StackPanel Width="220" Margin="18,0,0,0"><TextBlock Text="Sample rate (Hz)" Foreground="{DynamicResource Muted}" Margin="0,0,0,6"/>
+                <ComboBox x:Name="SampleRate" SelectionChanged="LoggingOption_Changed" ToolTip="Frames recorded per second when the live recorder supports this setting"><ComboBoxItem Content="15"/><ComboBoxItem Content="30"/><ComboBoxItem Content="60"/></ComboBox>
+              </StackPanel>
+            </StackPanel>
+            <TextBlock x:Name="CapacityText" Text="Buffer capacity: no live session" Foreground="{DynamicResource Muted}" Margin="0,24,0,6"/>
+            <ProgressBar x:Name="CapacityBar" Height="12" Maximum="100" Value="0" ToolTip="Live rolling buffer capacity; the oldest frames are replaced once full"/>
+            <TextBlock x:Name="PurgeWarning" Text="At 90% capacity the monitor will warn; at 100% it overwrites the oldest frames in the rolling buffer." Foreground="#D6A74A" Margin="0,8,0,0" TextWrapping="Wrap"/>
+          </StackPanel></Border></StackPanel></Grid>
           <Grid x:Name="AircraftView" Visibility="Collapsed"><StackPanel><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Aircraft-specific tracking" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="Create a profile for an aircraft title, then tune its logging settings. Profiles are local preferences; they do not change the simulator or aircraft package." Foreground="{StaticResource Muted}" Margin="0,6,0,20"/><TextBlock Text="Profile name" Foreground="{StaticResource Muted}"/><TextBox x:Name="ProfileName" TextChanged="ProfileName_TextChanged"/><TextBlock Text="Aircraft title (exact SimConnect title, optional)" Foreground="{StaticResource Muted}" Margin="0,16,0,0"/><TextBox x:Name="AircraftTitle" Text="Detect from the live monitor when available" IsReadOnly="True"/><TextBlock Text="Detection remains inactive until a supported live SimConnect session provides aircraft identity." Foreground="{StaticResource Muted}" Margin="0,8,0,0"/></StackPanel></Border></StackPanel></Grid>
           <Grid x:Name="TablesView" Visibility="Collapsed"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="210" MinWidth="160"/><ColumnDefinition Width="6"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="AVAILABLE TABLES" FontSize="12" Foreground="{StaticResource Muted}"/><ListBox x:Name="TablesList" Margin="0,14,0,0" SelectionChanged="TablesList_SelectionChanged"><ListBoxItem Content="Input frames" IsSelected="True"/><ListBoxItem Content="Switch words"/><ListBoxItem Content="Session events"/></ListBox></StackPanel></Border><GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="{DynamicResource Border}" ShowsPreview="True"/><Border Grid.Column="2" Style="{StaticResource Card}"><StackPanel><DockPanel><StackPanel DockPanel.Dock="Left"><TextBlock x:Name="TableTitle" Text="Input frames" FontSize="20" FontWeight="SemiBold"/><TextBlock x:Name="TableHint" Text="Open a dump to populate this table." Foreground="{StaticResource Muted}" Margin="0,4,0,16"/></StackPanel><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><Button Content="Snapshot" Click="Snapshot_Click"/><Button Content="Export last 10s" Click="ExportLastTenSeconds_Click"/></StackPanel></DockPanel><DataGrid x:Name="TelemetryGrid" AutoGenerateColumns="True" IsReadOnly="True" CanUserAddRows="False" SelectionMode="Single" Background="{DynamicResource InputBackground}" Foreground="{DynamicResource Text}" BorderBrush="{DynamicResource Border}"/></StackPanel></Border></Grid></Grid>
           <Grid x:Name="SettingsView" Visibility="Collapsed"><StackPanel>
             <Border Style="{StaticResource Card}"><StackPanel>
-              <DockPanel><StackPanel DockPanel.Dock="Left"><TextBlock Text="Simulator locations" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="Detected candidates are read-only. Choose a path to save it as this tool’s local preference." Foreground="{StaticResource Muted}"/></StackPanel><Button DockPanel.Dock="Right" Content="Find local folders" Click="FindFolders_Click"/></DockPanel>
-              <TextBlock Text="Appearance" Foreground="{StaticResource Muted}" Margin="0,22,0,5"/><ComboBox x:Name="ThemeMode" Width="220" HorizontalAlignment="Left" SelectionChanged="ThemeMode_Changed"><ComboBoxItem Content="System"/><ComboBoxItem Content="Light"/><ComboBoxItem Content="Dark"/></ComboBox>
+              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center"><TextBlock Text="Simulator locations" FontSize="20" FontWeight="SemiBold"/>
+                  <TextBlock Text="Choose a Community folder to save it as this tool’s local preference." Foreground="{DynamicResource Muted}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Find local folders" Click="FindFolders_Click" VerticalAlignment="Center" Margin="20,0,0,0" ToolTip="Scan standard MSFS configuration files and show likely Community folders"/>
+              </Grid>
+              <TextBlock Text="Appearance" Foreground="{DynamicResource Muted}" Margin="0,22,0,6"/><ComboBox x:Name="ThemeMode" Width="220" HorizontalAlignment="Left" SelectionChanged="ThemeMode_Changed" ToolTip="System follows the Windows app theme; Light and Dark override it"><ComboBoxItem Content="System"/><ComboBoxItem Content="Light"/><ComboBoxItem Content="Dark"/></ComboBox>
               <TextBlock Text="MSFS 2024 Community folder" Foreground="{StaticResource Muted}" Margin="0,22,0,5"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="Browse2024_Click"/><Button DockPanel.Dock="Right" Content="Open" Click="Open2024_Click"/><TextBox x:Name="Msfs2024Path" TextChanged="Path_TextChanged"/></DockPanel>
               <TextBlock Text="MSFS 2020 Community folder" Foreground="{StaticResource Muted}" Margin="0,18,0,5"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="Browse2020_Click"/><Button DockPanel.Dock="Right" Content="Open" Click="Open2020_Click"/><TextBox x:Name="Msfs2020Path" TextChanged="Path_TextChanged"/></DockPanel>
             </StackPanel></Border>
@@ -70,4 +99,3 @@
     </Grid>
   </Grid>
 </Window>
-
