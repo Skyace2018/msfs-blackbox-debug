@@ -6,9 +6,12 @@ namespace MsfsInputBlackbox.Decoder;
 
 internal static class ThemeManager
 {
-    private sealed record Palette(string App, string Sidebar, string Surface, string Raised, string Input, string Text, string Muted, string Accent, string Border, string Button);
-    private static readonly Palette Dark = new("#0B1017", "#101821", "#121A24", "#182332", "#0F1721", "#F1F6FC", "#B5C5D7", "#52A8FF", "#31506F", "#18324C");
-    private static readonly Palette Light = new("#F5F8FC", "#E8F0F8", "#FFFFFF", "#F1F6FB", "#FFFFFF", "#142233", "#496173", "#006DBA", "#A9BED2", "#DCEAF7");
+    private sealed record Palette(string App, string Sidebar, string Surface, string Raised, string Input, string Text, string Muted, string Accent, string Border, string Button,
+        string Connected, string Warning, string Error, string StatusBackground);
+    private static readonly Palette Dark = new("#0B1017", "#101821", "#121A24", "#182332", "#0F1721", "#F1F6FC", "#B5C5D7", "#52A8FF", "#31506F", "#18324C",
+        "#52E6A0", "#FFBA63", "#FF7F85", "#132536");
+    private static readonly Palette Light = new("#F5F8FC", "#E8F0F8", "#FFFFFF", "#F1F6FB", "#FFFFFF", "#142233", "#496173", "#006DBA", "#A9BED2", "#DCEAF7",
+        "#087A45", "#945000", "#B4232C", "#DCEAF7");
 
     public static bool IsDark { get; private set; }
 
@@ -20,6 +23,8 @@ internal static class ThemeManager
         Set("AppBackground", palette.App); Set("SidebarBackground", palette.Sidebar); Set("Surface", palette.Surface);
         Set("SurfaceRaised", palette.Raised); Set("InputBackground", palette.Input); Set("Text", palette.Text);
         Set("Muted", palette.Muted); Set("Accent", palette.Accent); Set("Border", palette.Border); Set("ButtonBackground", palette.Button);
+        Set("StatusConnected", palette.Connected); Set("StatusWarning", palette.Warning); Set("StatusError", palette.Error);
+        Set("SidebarStatusBackground", palette.StatusBackground);
     }
 
     private static bool SystemPrefersLight()
@@ -34,4 +39,3 @@ internal static class ThemeManager
             (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
     }
 }
-
