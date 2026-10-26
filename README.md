@@ -28,6 +28,8 @@ dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 
 The Windows 11–styled viewer dashboard has a branded debugger-style layout: resizable navigation/table rails, telemetry tables, aircraft profiles, logging preferences, developer export/snapshot tools, and Community-folder discovery. It validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
 
+Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
+
 ## Compiling the live SimConnect boundary
 
 Install the official `Microsoft.FlightSimulator.SimConnect.dll` from the MSFS SDK, then pass its path explicitly:
