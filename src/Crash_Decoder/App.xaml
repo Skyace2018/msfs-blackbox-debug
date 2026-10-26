@@ -12,6 +12,10 @@
     <SolidColorBrush x:Key="Border" Color="#31506F" />
     <SolidColorBrush x:Key="InputBackground" Color="#0F1721" />
     <SolidColorBrush x:Key="ButtonBackground" Color="#18324C" />
+    <SolidColorBrush x:Key="StatusConnected" Color="#52E6A0" />
+    <SolidColorBrush x:Key="StatusWarning" Color="#FFBA63" />
+    <SolidColorBrush x:Key="StatusError" Color="#FF7F85" />
+    <SolidColorBrush x:Key="SidebarStatusBackground" Color="#132536" />
     <Style TargetType="Button">
       <Setter Property="Foreground" Value="{DynamicResource Text}" />
       <Setter Property="Background" Value="{DynamicResource ButtonBackground}" />
