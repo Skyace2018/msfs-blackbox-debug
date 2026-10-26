@@ -31,6 +31,7 @@ internal static class LiveRecorderHost
         private readonly SimConnectMonitor _monitor;
         private readonly EventCaptureService _capture;
         private readonly RecorderPreferences _preferences;
+        private readonly LivePreviewStore _preview;
         private readonly System.Windows.Forms.Timer _timer;
         private DateTimeOffset _lastFrameUtc;
         private DateTimeOffset _lastReportUtc;
@@ -44,6 +45,7 @@ internal static class LiveRecorderHost
             Directory.CreateDirectory(DataDirectory);
             _preferences = RecorderPreferences.Load(DataDirectory);
             _capture = new EventCaptureService(_preferences.SampleRateHz * _preferences.HistorySeconds, DataDirectory);
+            _preview = new LivePreviewStore(DataDirectory);
             _window = new MessageWindow(SimConnectMessage);
             _monitor = new SimConnectMonitor(_window.Handle, SimConnectMessage);
             _window.ReceiveMessage = _monitor.ReceiveMessage;
@@ -79,6 +81,7 @@ internal static class LiveRecorderHost
             try { _capture.ProcessRequests(); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             { MonitorStatusStore.Report("error", "Cannot process event requests: " + ex.Message); }
+            if (_capture.Latest is { } previewFrame) _preview.Publish(_capture.SessionId, previewFrame);
             var now = DateTimeOffset.UtcNow;
             if (_hasReceivedFrame && now - _lastFrameUtc > TimeSpan.FromSeconds(5))
             {
