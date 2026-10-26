@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly AppSettings _settings = SettingsStore.Load();
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private TelemetryDump? _loadedDump;
+    private bool _isApplyingSettings;
 
     public MainWindow(string? initialDumpPath)
     {
@@ -22,7 +23,9 @@ public partial class MainWindow : Window
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _statusTimer.Start();
         Closed += (_, _) => _statusTimer.Stop();
+        _isApplyingSettings = true;
         ApplySettings();
+        _isApplyingSettings = false;
         RefreshCandidates();
         UpdateStatus();
         if (!string.IsNullOrWhiteSpace(initialDumpPath)) LoadDump(initialDumpPath);
@@ -117,7 +120,7 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
     }
 
-    private void Path_TextChanged(object sender, TextChangedEventArgs e) => SavePaths();
+    private void Path_TextChanged(object sender, TextChangedEventArgs e) { if (!_isApplyingSettings) SavePaths(); }
     private void SavePaths()
     {
         _settings.Msfs2020CommunityPath = Msfs2020Path?.Text.Trim();
@@ -126,6 +129,7 @@ public partial class MainWindow : Window
     }
     private void LoggingOption_Changed(object sender, RoutedEventArgs e)
     {
+        if (_isApplyingSettings) return;
         if (LoggingEnabled is null) return;
         _settings.LoggingEnabled = LoggingEnabled.IsChecked == true;
         _settings.KeepCrashDumps = KeepDumps.IsChecked == true;
@@ -135,15 +139,19 @@ public partial class MainWindow : Window
     }
     private void ProfileName_TextChanged(object sender, TextChangedEventArgs e)
     {
+        if (_isApplyingSettings) return;
         if (ProfileName is null) return;
         _settings.AircraftProfileName = string.IsNullOrWhiteSpace(ProfileName.Text) ? "Default / all aircraft" : ProfileName.Text.Trim();
         ProfileCard.Text = _settings.AircraftProfileName; TrySaveSettings();
     }
     private void UpdateLoggingCard() => LoggingCard.Text = _settings.LoggingEnabled ? $"Enabled • {_settings.HistorySeconds}s" : "Disabled";
-    private void TrySaveSettings() { try { SettingsStore.Save(_settings); } catch (IOException) { } }
+    private void TrySaveSettings() { try { SettingsStore.Save(_settings); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 
     private void TablesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // The selected item in XAML can raise this while InitializeComponent is
+        // still constructing the table labels.
+        if (TableTitle is null || TableHint is null) return;
         if (TablesList.SelectedItem is not System.Windows.Controls.ListBoxItem item) return;
         TableTitle.Text = item.Content.ToString() ?? "Telemetry table";
         if (item.Content?.ToString() != "Input frames") TableHint.Text = "This table will populate when the live monitor emits the corresponding data.";
