@@ -15,14 +15,23 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private TelemetryDump? _loadedDump;
     private bool _isApplyingSettings;
+    private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private TrayFlyout? _trayFlyout;
 
     public MainWindow(string? initialDumpPath)
     {
         InitializeComponent();
         SourceInitialized += (_, _) => ApplyWindows11Chrome();
+        StateChanged += (_, _) => { if (WindowState == WindowState.Minimized) MinimizeToTray(); };
+        InitializeTray();
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _statusTimer.Start();
-        Closed += (_, _) => _statusTimer.Stop();
+        Closed += (_, _) =>
+        {
+            _statusTimer.Stop();
+            _trayFlyout?.Close();
+            if (_trayIcon is not null) { _trayIcon.Visible = false; _trayIcon.Dispose(); }
+        };
         _isApplyingSettings = true;
         ApplySettings();
         _isApplyingSettings = false;
@@ -76,9 +85,54 @@ public partial class MainWindow : Window
         TrySaveSettings();
     }
 
-    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void Minimize_Click(object sender, RoutedEventArgs e) => MinimizeToTray();
     private void ToggleMaximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void InitializeTray()
+    {
+        var executable = Environment.ProcessPath;
+        _trayIcon = new System.Windows.Forms.NotifyIcon
+        {
+            Icon = executable is null ? System.Drawing.SystemIcons.Application : System.Drawing.Icon.ExtractAssociatedIcon(executable) ?? System.Drawing.SystemIcons.Application,
+            Text = "MSFS Input Blackbox",
+            Visible = true
+        };
+        Icon = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+            _trayIcon.Icon.Handle, Int32Rect.Empty, System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+        _trayIcon.MouseClick += (_, e) => Dispatcher.BeginInvoke(() =>
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left || e.Button == System.Windows.Forms.MouseButtons.Right)
+                ToggleTrayFlyout();
+        });
+        _trayIcon.MouseDoubleClick += (_, e) => Dispatcher.BeginInvoke(() => RestoreFullScreen());
+        _trayFlyout = new TrayFlyout(RestoreFullScreen, Close);
+    }
+
+    private void MinimizeToTray()
+    {
+        WindowState = WindowState.Normal;
+        Hide();
+        ShowInTaskbar = false;
+        _trayFlyout?.Hide();
+    }
+
+    private void RestoreFullScreen()
+    {
+        _trayFlyout?.Hide();
+        ShowInTaskbar = true;
+        Show();
+        WindowState = WindowState.Maximized;
+        Activate();
+    }
+
+    private void ToggleTrayFlyout()
+    {
+        if (_trayFlyout is null) return;
+        if (_trayFlyout.IsVisible) { _trayFlyout.Hide(); return; }
+        var status = MonitorStatusReader.Read();
+        _trayFlyout.ShowNearTaskbar(status.State == "connected" ? "MSFS connected: " + status.Detail : "Recorder: " + status.Detail);
+    }
 
     private void OpenDump_Click(object sender, RoutedEventArgs e)
     {
@@ -286,4 +340,3 @@ public partial class MainWindow : Window
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 }
-
