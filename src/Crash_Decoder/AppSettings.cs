@@ -7,6 +7,11 @@ internal sealed class AppSettings
 {
     public string? Msfs2020CommunityPath { get; set; }
     public string? Msfs2024CommunityPath { get; set; }
+    public bool LoggingEnabled { get; set; } = true;
+    public bool KeepCrashDumps { get; set; } = true;
+    public int HistorySeconds { get; set; } = 60;
+    public int SampleRateHz { get; set; } = 30;
+    public string AircraftProfileName { get; set; } = "Default / all aircraft";
 }
 
 internal static class SettingsStore
