@@ -11,6 +11,7 @@ Date: 2026-10-25
 | Decoder UI launch smoke test | VERIFIED | The WPF shell launched without an exception and remained open during a 10-second local smoke test after startup-event and settings-write guards were added. |
 | Developer export and rolling-capacity UI | VERIFIED | Recorder and WPF decoder both built with 0 warnings; decoder self-test and a subsequent 10-second launch smoke test passed. Export contents and live buffer percentage still require an actual telemetry session. |
 | Maximized launch and in-app window controls | VERIFIED | The WPF decoder builds with 0 warnings after adding default maximized launch plus persistent minimize, restore/maximize, and close controls. |
+| System / Light / Dark theme selector | VERIFIED | The decoder builds with 0 warnings and passed a 10-second launch smoke test after adding persistent theme preferences and theme-aware WPF checkbox/dropdown controls. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
 | MSFS SDK WASM compile | BLOCKED | No MSFS SDK/toolchain was available in this environment. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
