@@ -3,15 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Application.Resources>
     <SolidColorBrush x:Key="AppBackground" Color="#0B1017" />
+    <SolidColorBrush x:Key="SidebarBackground" Color="#101821" />
     <SolidColorBrush x:Key="Surface" Color="#121A24" />
     <SolidColorBrush x:Key="SurfaceRaised" Color="#182332" />
     <SolidColorBrush x:Key="Text" Color="#E7EEF8" />
     <SolidColorBrush x:Key="Muted" Color="#98A8BA" />
     <SolidColorBrush x:Key="Accent" Color="#52A8FF" />
+    <SolidColorBrush x:Key="Border" Color="#31506F" />
+    <SolidColorBrush x:Key="InputBackground" Color="#0F1721" />
+    <SolidColorBrush x:Key="ButtonBackground" Color="#18324C" />
     <Style TargetType="Button">
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
-      <Setter Property="Background" Value="#1B2A3A" />
-      <Setter Property="BorderBrush" Value="#31506F" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+      <Setter Property="Background" Value="{DynamicResource ButtonBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
       <Setter Property="Padding" Value="12,7" />
       <Setter Property="Margin" Value="0,0,8,0" />
       <Setter Property="Cursor" Value="Hand" />
@@ -20,22 +24,27 @@
       <Setter Property="HorizontalContentAlignment" Value="Left" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="Foreground" Value="{StaticResource Muted}" />
+      <Setter Property="Foreground" Value="{DynamicResource Muted}" />
       <Setter Property="Padding" Value="14,11" />
       <Setter Property="Margin" Value="8,2" />
     </Style>
     <Style TargetType="TextBox">
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
-      <Setter Property="Background" Value="#0F1721" />
-      <Setter Property="BorderBrush" Value="#31506F" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+      <Setter Property="Background" Value="{DynamicResource InputBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
       <Setter Property="Padding" Value="9,7" />
     </Style>
     <Style TargetType="ComboBox">
-      <Setter Property="Foreground" Value="{StaticResource Text}" />
-      <Setter Property="Background" Value="#0F1721" />
-      <Setter Property="BorderBrush" Value="#31506F" />
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+      <Setter Property="Background" Value="{DynamicResource InputBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
       <Setter Property="Padding" Value="6" />
+      <Setter Property="Template">
+        <Setter.Value><ControlTemplate TargetType="ComboBox"><Grid><ToggleButton x:Name="Toggle" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"><Grid><ContentPresenter Content="{TemplateBinding SelectionBoxItem}" VerticalAlignment="Center"/><Path Data="M 0 0 L 8 0 L 4 5 Z" Fill="{DynamicResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0"/></Grid></ToggleButton><Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False"><Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="1" MinWidth="{Binding ActualWidth, ElementName=Toggle}"><ScrollViewer MaxHeight="220"><ItemsPresenter/></ScrollViewer></Border></Popup></Grid></ControlTemplate></Setter.Value>
+      </Setter>
     </Style>
+    <Style TargetType="ComboBoxItem"><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="Padding" Value="9,7"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Root" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceRaised}"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Root" Property="Background" Value="{DynamicResource ButtonBackground}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+    <Style TargetType="CheckBox"><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><DockPanel><Border x:Name="Box" Width="18" Height="18" CornerRadius="4" BorderBrush="{DynamicResource Border}" BorderThickness="1" Background="{DynamicResource InputBackground}" Margin="0,0,8,0"><Path x:Name="Tick" Data="M 3 9 L 7 13 L 15 4" Stroke="White" StrokeThickness="2" Visibility="Collapsed"/></Border><ContentPresenter VerticalAlignment="Center"/></DockPanel><ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Box" Property="Background" Value="{DynamicResource Accent}"/><Setter TargetName="Tick" Property="Visibility" Value="Visible"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
   </Application.Resources>
 </Application>
 
