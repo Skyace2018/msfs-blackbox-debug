@@ -1,5 +1,6 @@
 // MIT License. Copyright (c) 2026 MSFS-Input-Blackbox contributors.
 using System.Text.Json;
+using System.IO.Compression;
 
 namespace MsfsInputBlackbox.Decoder;
 
@@ -36,8 +37,15 @@ internal static class SelfTest
             updatedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10), frames = payload.frames
         }));
         var staleRejected = LivePreviewReader.ReadFromPath(previewPath, sessionId) is null;
+        var diagnosticsPath = Path.Combine(Path.GetTempPath(), $"msfs-blackbox-diagnostics-self-test-{Guid.NewGuid():N}.zip");
+        DiagnosticLog.Write("synthetic_self_test");
+        DeveloperExport.CreateDiagnosticsBundle(diagnosticsPath, new MonitorStatus { State = "not-running" });
+        using var diagnosticsZip = ZipFile.OpenRead(diagnosticsPath);
+        var diagnosticsBundleValid = diagnosticsZip.GetEntry("viewer-diagnostics.log") is not null &&
+            diagnosticsZip.GetEntry("recorder-status.json") is not null &&
+            diagnosticsZip.GetEntry("telemetry.json") is null;
         return dump.Frames.Count == 2 && dump.Frames[1].Timestamp == 20
             && string.Equals(CommunityFolderDiscovery.ExtractPackagesPath(File.ReadAllText(configPath)), "D:\\MSFS Packages", StringComparison.OrdinalIgnoreCase)
-            && preview?.Frames.Length == 2 && wrongSessionRejected && staleRejected;
+            && preview?.Frames.Length == 2 && wrongSessionRejected && staleRejected && diagnosticsBundleValid;
     }
 }
