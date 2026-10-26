@@ -42,6 +42,7 @@ internal static class Program
         var eventDirectory = Path.Combine(Path.GetTempPath(), "msfs-blackbox-event-test-" + Guid.NewGuid().ToString("N"));
         var capture = new EventCaptureService(3, eventDirectory);
         foreach (var frame in snapshot) capture.AddFrame(frame);
+        capture.SetAircraftState(new AircraftState("Synthetic SimConnect aircraft", 123.5, 4567.0, DateTimeOffset.UtcNow));
         var id = Guid.NewGuid();
         var eventPath = Path.Combine(eventDirectory, "event.zip");
         var requestPath = Path.Combine(eventDirectory, "event-requests", id.ToString("N") + ".json");
@@ -64,8 +65,9 @@ internal static class Program
             using var eventDocument = JsonDocument.Parse(zip.GetEntry("event.json")!.Open());
             var eventRoot = eventDocument.RootElement;
             if (eventRoot.GetProperty("lastInputs").GetProperty("Timestamp").GetUInt32() != 5 ||
-                eventRoot.GetProperty("aircraftType").GetString() != "Synthetic aircraft" ||
-                eventRoot.GetProperty("variablesCaptured").GetArrayLength() != 8 ||
+                eventRoot.GetProperty("aircraftType").GetString() != "Synthetic SimConnect aircraft" ||
+                eventRoot.GetProperty("aircraftVariables").GetProperty("IndicatedAirspeedKnots").GetDouble() != 123.5 ||
+                eventRoot.GetProperty("variablesCaptured").GetArrayLength() != 10 ||
                 !eventRoot.TryGetProperty("markedAtUtc", out _))
                 return Fail("Event export is missing the marker, last input, variables, or aircraft label.");
         }
