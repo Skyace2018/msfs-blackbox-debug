@@ -13,7 +13,8 @@ internal static class MonitorStatusStore
 
     public static void Report(string state, string detail, uint? lastFrameTimestamp = null,
         TelemetryFrame? latestInput = null, int? bufferedFrames = null, int? bufferCapacity = null,
-        Guid? sessionId = null, string? aircraftType = null, DateTimeOffset? lastFrameReceivedAtUtc = null)
+        Guid? sessionId = null, string? aircraftType = null, DateTimeOffset? lastFrameReceivedAtUtc = null,
+        double? indicatedAirspeedKnots = null, double? altitudeFeet = null)
     {
         try
         {
@@ -23,7 +24,8 @@ internal static class MonitorStatusStore
                 State = state, Detail = detail, UpdatedAtUtc = DateTimeOffset.UtcNow,
                 LastFrameTimestamp = lastFrameTimestamp, LatestInput = latestInput,
                 BufferedFrames = bufferedFrames, BufferCapacity = bufferCapacity,
-                SessionId = sessionId, AircraftType = aircraftType, LastFrameReceivedAtUtc = lastFrameReceivedAtUtc
+                SessionId = sessionId, AircraftType = aircraftType, LastFrameReceivedAtUtc = lastFrameReceivedAtUtc,
+                IndicatedAirspeedKnots = indicatedAirspeedKnots, AltitudeFeet = altitudeFeet
             }, new JsonSerializerOptions { IncludeFields = true });
             var temporaryPath = StatusPath + ".tmp";
             File.WriteAllText(temporaryPath, body);
