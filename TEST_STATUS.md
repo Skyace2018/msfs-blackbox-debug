@@ -8,6 +8,7 @@ Date: 2026-10-25
 | .NET recorder build | VERIFIED | `dotnet build src/External_Recorder/External_Recorder.csproj --no-restore` succeeded with 0 warnings on .NET SDK 10.0.401, targeting .NET 8. |
 | .NET recorder synthetic self-test | VERIFIED | `dotnet run --project src/External_Recorder --no-build -- --self-test` passed: 36-byte layout, three newest frames retained in order, and JSON dump emitted with telemetry fields. |
 | Decoder UI build / parser self-test | VERIFIED | The decoder was migrated to a WPF Windows 11–styled dashboard and built successfully to a separate output folder because an older running executable held the default output lock. Its `--self-test` passed against synthetic telemetry and `UserCfg.opt` data. |
+| Decoder UI launch smoke test | VERIFIED | The WPF shell launched without an exception and remained open during a 10-second local smoke test after startup-event and settings-write guards were added. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
 | MSFS SDK WASM compile | BLOCKED | No MSFS SDK/toolchain was available in this environment. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
