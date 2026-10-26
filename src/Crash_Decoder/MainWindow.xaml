@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MSFS Input Blackbox" Height="900" Width="1440" MinHeight="720" MinWidth="1120"
         Background="{StaticResource AppBackground}" Foreground="{StaticResource Text}"
-        WindowStartupLocation="CenterScreen" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" SizeToContent="Manual">
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResize" WindowStyle="SingleBorderWindow" SizeToContent="Manual" WindowState="Maximized">
   <Window.Resources>
     <Style x:Key="Card" TargetType="Border"><Setter Property="Background" Value="{StaticResource Surface}"/><Setter Property="BorderBrush" Value="#263C52"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="14"/><Setter Property="Padding" Value="20"/><Setter Property="Margin" Value="0,0,14,0"/></Style>
   </Window.Resources>
@@ -29,6 +29,11 @@
       </DockPanel>
     </Border>
     <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" Background="#24384C" ShowsPreview="True"/>
+    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,18,0" Panel.ZIndex="20">
+      <Button Width="36" Height="28" Padding="0" Margin="2" Content="—" ToolTip="Minimize" Click="Minimize_Click"/>
+      <Button Width="36" Height="28" Padding="0" Margin="2" Content="▢" ToolTip="Restore or maximize" Click="ToggleMaximize_Click"/>
+      <Button Width="36" Height="28" Padding="0" Margin="2" Content="×" ToolTip="Close" Click="Close_Click"/>
+    </StackPanel>
     <Grid Grid.Column="2" Margin="30">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
       <DockPanel Margin="0,0,0,24">
