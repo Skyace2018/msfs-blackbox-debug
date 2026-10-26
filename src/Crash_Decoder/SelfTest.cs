@@ -21,8 +21,23 @@ internal static class SelfTest
         var configPath = Path.Combine(Path.GetTempPath(), "msfs-blackbox-usercfg-self-test.opt");
         File.WriteAllText(configPath, "InstalledPackagesPath \"D:\\MSFS Packages\"");
         var dump = TelemetryDumpReader.Read(dumpPath);
+        var previewPath = Path.Combine(Path.GetTempPath(), "msfs-blackbox-preview-self-test.json");
+        var sessionId = Guid.NewGuid();
+        File.WriteAllText(previewPath, JsonSerializer.Serialize(new
+        {
+            schema = "msfs-input-blackbox/live-preview/v1", sessionId,
+            updatedAtUtc = DateTimeOffset.UtcNow, frames = payload.frames
+        }));
+        var preview = LivePreviewReader.ReadFromPath(previewPath, sessionId);
+        var wrongSessionRejected = LivePreviewReader.ReadFromPath(previewPath, Guid.NewGuid()) is null;
+        File.WriteAllText(previewPath, JsonSerializer.Serialize(new
+        {
+            schema = "msfs-input-blackbox/live-preview/v1", sessionId,
+            updatedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10), frames = payload.frames
+        }));
+        var staleRejected = LivePreviewReader.ReadFromPath(previewPath, sessionId) is null;
         return dump.Frames.Count == 2 && dump.Frames[1].Timestamp == 20
-            && string.Equals(CommunityFolderDiscovery.ExtractPackagesPath(File.ReadAllText(configPath)), "D:\\MSFS Packages", StringComparison.OrdinalIgnoreCase);
+            && string.Equals(CommunityFolderDiscovery.ExtractPackagesPath(File.ReadAllText(configPath)), "D:\\MSFS Packages", StringComparison.OrdinalIgnoreCase)
+            && preview?.Frames.Length == 2 && wrongSessionRejected && staleRejected;
     }
 }
-
