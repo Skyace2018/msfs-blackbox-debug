@@ -7,11 +7,13 @@
 - The official SimConnect managed interop DLL supplied to the recorder build; do not redistribute it.
 - Developer Mode enabled and the WASM package installed only in the test Community folder.
 
+First run `powershell -NoProfile -File scripts\Test-LivePrerequisites.ps1 -SimConnectDll "C:\path\to\Microsoft.FlightSimulator.SimConnect.dll"` from the repository root. Record its output. This checks the official managed DLL and compiles the conditional recorder; it does not launch MSFS or deploy the WASM hook.
+
 ## 1. Transport smoke test — UNKNOWN until run
 
 1. Build/package the hook with `MSFS_WASM_SIMCONNECT_SUPPORTED=1` after verifying the SDK supports that configuration.
 2. Start the simulator in Developer Mode and load a default aircraft at a quiet airport.
-3. Start the recorder and verify it reports changing timestamps while moving aileron, elevator, rudder, and throttle controls.
+3. Start the recorder and verify it reports changing timestamps while moving aileron, elevator, rudder, and throttle controls. Confirm the aircraft title, indicated airspeed (knots), and plane altitude (feet) arrive through the separate user-aircraft SimConnect request.
 4. Confirm the recorder receives 36-byte frames and values remain finite and within expected normalized ranges.
 
 Pass criterion: 60 seconds of continuously advancing frames, with observed control movement. Record simulator build, SDK version, aircraft, package path, and any console output in `TEST_STATUS.md`.
@@ -40,8 +42,8 @@ The managed interop delivers callbacks through a Windows message loop. The condi
 
 1. With the recorder receiving live frames, minimize the viewer to the tray and open the compact dashboard.
 2. Verify the connection heartbeat remains fresh, the input values change with real controls, and the buffer count advances. Confirm a stopped recorder changes to an unconfirmed state after the heartbeat expires.
-3. Enter the actual aircraft title under **Aircraft profiles**, choose a developer-export folder, and select **Mark event + export** while changing a control.
-4. Confirm exactly one new ZIP appears, the tray reports its path, and the ZIP contains `telemetry.json`, `event.json`, `manifest.json`, and `README.txt`. Compare the UTC marker, frame range, last inputs, and user-entered aircraft label with the observed session. Do not treat the label as simulator-verified.
+3. Choose a developer-export folder and select **Mark event + export** while changing a control. Only enter a manual aircraft title if the simulator-reported title is unavailable.
+4. Confirm exactly one new ZIP appears, the tray reports its path, and the ZIP contains `telemetry.json`, `event.json`, `manifest.json`, and `README.txt`. Compare the UTC marker, frame range, last inputs, aircraft title, indicated airspeed, and altitude with the observed session. Confirm `event.json` labels whether the title was recorder-reported or user-entered.
 5. Repeat after disconnect; the button should be disabled and an old request must not export frames from a new session.
 
 ## Reporting rules
