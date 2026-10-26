@@ -26,7 +26,7 @@ The command proves frame layout validation, wraparound behavior, ordered snapsho
 dotnet run --project src/Crash_Decoder -- C:\path\to\crash_telemetry_dump.json
 ```
 
-The viewer plots control inputs, shows raw frames and switch words, and validates the dump schema before display. See [decoder details](docs/DECODER_UI.md).
+The larger viewer dashboard plots control inputs, shows raw frames and switch words, validates the dump schema before display, and has an Options panel that discovers or stores MSFS 2020/2024 Community-folder locations. See [decoder details](docs/DECODER_UI.md).
 
 ## Compiling the live SimConnect boundary
 
