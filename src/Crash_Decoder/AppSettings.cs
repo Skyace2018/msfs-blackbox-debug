@@ -12,6 +12,7 @@ internal sealed class AppSettings
     public int HistorySeconds { get; set; } = 60;
     public int SampleRateHz { get; set; } = 30;
     public string AircraftProfileName { get; set; } = "Default / all aircraft";
+    public string? AircraftTitle { get; set; }
     public string? SessionLogPath { get; set; }
     public string? ExportFolder { get; set; }
     public string ThemeMode { get; set; } = "System";
@@ -43,4 +44,3 @@ internal static class SettingsStore
         File.Move(temporaryPath, SettingsPath, true);
     }
 }
-
