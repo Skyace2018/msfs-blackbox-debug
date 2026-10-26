@@ -43,6 +43,16 @@ internal static class Program
         var capture = new EventCaptureService(3, eventDirectory);
         foreach (var frame in snapshot) capture.AddFrame(frame);
         capture.SetAircraftState(new AircraftState("Synthetic SimConnect aircraft", 123.5, 4567.0, DateTimeOffset.UtcNow));
+        var preview = new LivePreviewStore(eventDirectory);
+        foreach (var frame in snapshot) preview.Publish(capture.SessionId, frame);
+        using (var previewDocument = JsonDocument.Parse(File.ReadAllText(Path.Combine(eventDirectory, "live-preview.json"))))
+        {
+            var previewRoot = previewDocument.RootElement;
+            if (previewRoot.GetProperty("schema").GetString() != LivePreviewStore.Schema ||
+                previewRoot.GetProperty("frames").GetArrayLength() != 3 ||
+                previewRoot.GetProperty("frames")[2].GetProperty("Timestamp").GetUInt32() != 5)
+                return Fail("Live preview did not preserve the ordered input samples.");
+        }
         var id = Guid.NewGuid();
         var eventPath = Path.Combine(eventDirectory, "event.zip");
         var requestPath = Path.Combine(eventDirectory, "event-requests", id.ToString("N") + ".json");
@@ -76,7 +86,7 @@ internal static class Program
         var preferences = RecorderPreferences.Load(eventDirectory);
         if (preferences.HistorySeconds != 3600 || preferences.SampleRateHz != 60)
             return Fail("Recorder did not load the selected one-hour history and 60 Hz sample rate.");
-        Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, event ZIP created, one-hour preferences loaded, dump={dumpPath}");
+        Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, live preview and event ZIP created, one-hour preferences loaded, dump={dumpPath}");
         return 0;
     }
 
