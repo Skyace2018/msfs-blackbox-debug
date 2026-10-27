@@ -89,6 +89,7 @@ public partial class MainWindow : Window
             _ => "Review recent inputs and recorder health."
         };
         if (page == "Dashboard" && !_isLiveTimeline) ShowDumpTimeline();
+        RefreshPreviewTimer();
     }
 
     private void ThemeMode_Changed(object sender, SelectionChangedEventArgs e)
@@ -128,6 +129,7 @@ public partial class MainWindow : Window
     {
         WindowState = WindowState.Normal;
         Hide();
+        RefreshPreviewTimer();
         ShowInTaskbar = false;
         _trayFlyout?.Hide();
     }
@@ -137,6 +139,7 @@ public partial class MainWindow : Window
         _trayFlyout?.Hide();
         ShowInTaskbar = true;
         Show();
+        RefreshPreviewTimer();
         WindowState = WindowState.Maximized;
         Activate();
     }
