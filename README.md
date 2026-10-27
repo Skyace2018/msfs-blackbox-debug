@@ -34,6 +34,8 @@ The dashboard now has a collapsible navigation rail, an expandable input chart, 
 
 For another Windows x64 computer, use the self-contained development ZIP described in [portable test package](docs/PORTABLE_TEST_PACKAGE.md). Extract the whole ZIP, then double-click `Crash_Decoder.exe`; no PowerShell or separate .NET installation is needed. The development build also records bounded local viewer diagnostics and can export them without a telemetry dump.
 
+Development diagnostics include a 30-second viewer CPU/memory summary. A connected recorder publishes aggregate frame counters and adds a `performance.json` summary to event exports. These counters have synthetic-test coverage; simulator frame-time impact still needs live measurement under the [performance and isolation plan](docs/PERFORMANCE_AND_ISOLATION_PLAN.md).
+
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
 Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
 
