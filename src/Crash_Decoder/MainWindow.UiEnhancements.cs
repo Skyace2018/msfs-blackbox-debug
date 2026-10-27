@@ -90,14 +90,24 @@ public partial class MainWindow
         TimelineTitle.Text = _isLiveTimeline ? "Input timeline • LIVE" : "Input timeline";
         if (_isLiveTimeline)
         {
-            _previewTimer.Start();
-            UpdateLiveTimeline();
+            RefreshPreviewTimer();
         }
         else
         {
             _previewTimer.Stop();
             ShowDumpTimeline();
         }
+    }
+
+    private void RefreshPreviewTimer()
+    {
+        if (_isLiveTimeline && IsVisible && DashboardView.Visibility == Visibility.Visible &&
+            WindowState != WindowState.Minimized)
+        {
+            _previewTimer.Start();
+            UpdateLiveTimeline();
+        }
+        else _previewTimer.Stop();
     }
 
     private void UpdateLiveTimeline()
