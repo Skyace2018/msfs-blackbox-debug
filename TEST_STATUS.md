@@ -22,6 +22,7 @@ Date: 2026-10-25
 | Managed-interoperability compile probe | VERIFIED | The SDK-only C# source compiled against a local test double shaped like the documented managed API. This checks conditional C# syntax and host wiring only; the test double is ignored by Git and is not the official SDK. |
 | Live connection indicator | UNKNOWN | The local status contract is implemented, but a real SimConnect session has not been run in this environment. |
 | Live chart in MSFS | UNKNOWN | The local preview writer/reader and chart are implemented, but no simulator or SDK is installed here to verify live frames or timing. |
+| Multi-simulator performance and isolation | UNKNOWN | Only the MSFS-specific transport design exists. No other simulator adapter, side-by-side add-on test, frame-time benchmark, or callback latency measurement has been run. The current message-loop thread performs preview file writes and export processing; these are listed as pre-release fixes in `docs/PERFORMANCE_AND_ISOLATION_PLAN.md`. |
 | MSFS SDK WASM compile | BLOCKED | The user confirmed that this PC does not have the simulator or SDK. |
 | MSFS 2024 live transport | UNKNOWN | Requires the supported gauge/WASM SimConnect pathway and an installed simulator. |
 | Crash / disconnect behavior in MSFS | UNKNOWN | Must be exercised using the procedure in `docs/LIVE_TEST_PLAN.md`. |
