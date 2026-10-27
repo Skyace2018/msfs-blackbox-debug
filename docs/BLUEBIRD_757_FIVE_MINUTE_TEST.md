@@ -4,11 +4,11 @@ Status: planned, not yet run. This is a first smoke test, not a performance cert
 
 ## First: establish which test is possible
 
-The current Google Drive ZIP contains the WPF viewer only. It cannot receive live MSFS data by itself. On the test PC, run the SDK preflight from a copy of this repository (`scripts/Test-LivePrerequisites.ps1`) against the official managed SimConnect DLL. A successful preflight proves that the conditional C# recorder compiles; it does **not** prove that an in-simulator WASM sender has been built or installed. Follow `LIVE_TEST_PLAN.md` for that separate transport check. If the sender is absent, stop the live checklist and use the viewer-only checklist below. Record **BLOCKED: sender unavailable**, rather than reporting an empty Live View as a failed aircraft test.
+The current Google Drive ZIP contains the WPF viewer only. It cannot receive live MSFS data by itself. On the test PC, run the SDK preflight from a copy of this repository (`scripts/Test-LivePrerequisites.ps1`) against the official managed SimConnect DLL. A successful preflight proves that the conditional C# recorder compiles; it does **not** prove that an in-simulator WASM sender has been built or installed. The current source defines `blackbox_service_tick` but does not yet register it with an approved MSFS update callback or ship a deployable package. **Therefore the live checklist is blocked until that sender is completed and validated against the target SDK.** Use the viewer-only checklist below now; record **BLOCKED: sender unavailable**, rather than reporting an empty Live View as a failed aircraft test.
 
 The [BlueBird 757 public Simvars list](https://support.bluebirdsim.com/docs/simvars) publishes aircraft-specific L-Vars for third-party integrations. The present Blackbox v1 frame does **not** capture those L-Vars. It captures standard yoke X/Y, rudder, throttle, and four switch words; the recorder separately requests the user-aircraft title, indicated airspeed, and altitude. Test the basic input transport first. Do not interpret absent BlueBird-specific switch values as a 757 failure.
 
-## If the SDK-enabled recorder and sender are working
+## After the SDK-enabled recorder and sender are completed and working
 
 Before loading the aircraft, record the MSFS build, BlueBird 757 version, test airport, major add-ons, and controller type. In Blackbox **Live recording**, enable input logging, select **300 seconds** of history and **30 Hz**, then restart the recorder so it loads the setting. Choose a folder under **Settings → Developer handoff**. Confirm the UI says **Connected** and the latest input timestamp advances; otherwise stop and record the preflight result.
 
