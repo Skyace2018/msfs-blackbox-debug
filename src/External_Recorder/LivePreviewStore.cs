@@ -27,7 +27,22 @@ internal sealed class LivePreviewStore
         _frames.Enqueue(frame);
         while (_frames.Count > MaxFrames) _frames.Dequeue();
         var body = new { schema = Schema, sessionId, updatedAtUtc = DateTimeOffset.UtcNow, frames = _frames.ToArray() };
-        try { File.WriteAllText(_path, JsonSerializer.Serialize(body, JsonOptions)); }
+        var json = JsonSerializer.Serialize(body, JsonOptions);
+        try
+        {
+            var temporaryPath = _path + ".tmp";
+            try
+            {
+                File.WriteAllText(temporaryPath, json);
+                File.Move(temporaryPath, _path, true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Some restricted filesystems permit writes but not rename/replace.
+                // The viewer tolerates a partially written preview and retries next tick.
+                File.WriteAllText(_path, json);
+            }
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         { /* A display feed failure must not interrupt evidence capture. */ }
     }
