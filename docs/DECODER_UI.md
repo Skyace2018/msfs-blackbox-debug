@@ -22,6 +22,8 @@ The navigation rail and the telemetry-table rail both have draggable splitters, 
 
 The SimConnect card uses green for confirmed incoming frames, orange while stopped or connecting, and red for disconnect/error. Its pulsing dot and last-check time show that the viewer is polling the local recorder status every two seconds; the pulse does not prove a simulator connection. The chart's **Live View** toggle displays recent inputs automatically when the external recorder is connected and publishing frames. This local display feed is limited to 240 points sampled at up to 4 Hz (about 60 seconds). It is separate from the full-rate rolling evidence buffer. With Live View off, an opened dump plots its final 60 seconds.
 
+Live chart file reads and redraws pause while the viewer is in the tray or a different page, and resume when the dashboard is shown again. The two-second recorder heartbeat continues so the tray can report connection state.
+
 ## Tray controls
 
 Minimize the main window with either its title-bar control or the dashboard control to keep the viewer running in the Windows notification area. Click the Blackbox tray icon for a compact live dashboard with connection state, latest input values, rolling-buffer use, and aircraft information. It offers **Mark event + export**, **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the tray icon to restore the maximized dashboard. Closing the main window exits the viewer and removes its tray icon. Tray mode does not start the external recorder on its own.
