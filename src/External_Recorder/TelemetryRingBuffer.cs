@@ -44,9 +44,10 @@ public sealed class TelemetryRingBuffer
         {
             var copy = new TelemetryFrame[_count];
             var first = (_next - _count + _items.Length) % _items.Length;
-            for (var i = 0; i < _count; i++) copy[i] = _items[(first + i) % _items.Length];
+            var firstChunk = Math.Min(_count, _items.Length - first);
+            Array.Copy(_items, first, copy, 0, firstChunk);
+            if (firstChunk < _count) Array.Copy(_items, 0, copy, firstChunk, _count - firstChunk);
             return copy;
         }
     }
 }
-
