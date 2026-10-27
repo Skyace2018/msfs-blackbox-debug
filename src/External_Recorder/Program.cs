@@ -40,7 +40,18 @@ internal static class Program
         if (dumpedFrames.GetArrayLength() != 3 || dumpedFrames[0].GetProperty("Timestamp").GetUInt32() != 3)
             return Fail("Self-test dump did not preserve telemetry fields.");
         var eventDirectory = Path.Combine(Path.GetTempPath(), "msfs-blackbox-event-test-" + Guid.NewGuid().ToString("N"));
-        var capture = new EventCaptureService(3, eventDirectory);
+        var performance = new RecorderPerformance(SampleRateHz);
+        performance.Received(0);
+        performance.Received(33);
+        performance.Received(133);
+        performance.Accepted();
+        performance.Accepted();
+        performance.RateLimited();
+        var metrics = performance.Snapshot();
+        if (metrics.ReceivedFrames != 3 || metrics.AcceptedFrames != 2 ||
+            metrics.RateLimitedFrames != 1 || metrics.EstimatedSamplingGaps < 1)
+            return Fail("Recorder performance counters did not distinguish accepted, rate-limited, and estimated gaps.");
+        var capture = new EventCaptureService(3, eventDirectory, performance.Snapshot);
         foreach (var frame in snapshot) capture.AddFrame(frame);
         capture.SetAircraftState(new AircraftState("Synthetic SimConnect aircraft", 123.5, 4567.0, DateTimeOffset.UtcNow));
         var preview = new LivePreviewStore(eventDirectory);
@@ -70,8 +81,16 @@ internal static class Program
         }
         using (var zip = ZipFile.OpenRead(eventPath))
         {
-            if (zip.GetEntry("telemetry.json") is null || zip.GetEntry("event.json") is null || zip.GetEntry("manifest.json") is null)
-                return Fail("Event export is missing telemetry, event, or manifest data.");
+            if (zip.GetEntry("telemetry.json") is null || zip.GetEntry("event.json") is null ||
+                zip.GetEntry("manifest.json") is null || zip.GetEntry("performance.json") is null)
+                return Fail("Event export is missing telemetry, event, manifest, or performance data.");
+            using (var performanceDocument = JsonDocument.Parse(zip.GetEntry("performance.json")!.Open()))
+            {
+                var counters = performanceDocument.RootElement.GetProperty("counters");
+                if (counters.GetProperty("ReceivedFrames").GetInt64() != 3 ||
+                    counters.GetProperty("EstimatedSamplingGaps").GetInt64() < 1)
+                    return Fail("Event export performance counters are incorrect.");
+            }
             using var eventDocument = JsonDocument.Parse(zip.GetEntry("event.json")!.Open());
             var eventRoot = eventDocument.RootElement;
             if (eventRoot.GetProperty("lastInputs").GetProperty("Timestamp").GetUInt32() != 5 ||
