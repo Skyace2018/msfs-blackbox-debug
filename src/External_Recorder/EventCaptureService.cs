@@ -31,6 +31,7 @@ internal sealed class EventCaptureService
     private readonly string _resultDirectory;
     private readonly Guid _sessionId = Guid.NewGuid();
     private readonly Func<RecorderPerformanceSnapshot>? _performanceSnapshot;
+    private readonly object _stateGate = new();
     private TelemetryFrame? _latest;
     private AircraftState? _aircraftState;
 
@@ -47,17 +48,17 @@ internal sealed class EventCaptureService
 
     public int Count => _ring.Count;
     public int Capacity => _ring.Capacity;
-    public TelemetryFrame? Latest => _latest;
+    public TelemetryFrame? Latest { get { lock (_stateGate) return _latest; } }
     public Guid SessionId => _sessionId;
     public TelemetryFrame[] Snapshot() => _ring.SnapshotOldestFirst();
 
     public void AddFrame(TelemetryFrame frame)
     {
         _ring.Add(frame);
-        _latest = frame;
+        lock (_stateGate) _latest = frame;
     }
 
-    public void SetAircraftState(AircraftState state) => _aircraftState = state;
+    public void SetAircraftState(AircraftState state) { lock (_stateGate) _aircraftState = state; }
 
     public void ProcessRequests()
     {
@@ -105,7 +106,8 @@ internal sealed class EventCaptureService
                 stage = "write archive entries";
                 var last = frames[^1];
                 var capturedAtUtc = DateTimeOffset.UtcNow;
-                var aircraft = _aircraftState;
+                AircraftState? aircraft;
+                lock (_stateGate) aircraft = _aircraftState;
                 var aircraftTitle = string.IsNullOrWhiteSpace(aircraft?.Title) ? request.AircraftType : aircraft.Value.Title;
                 var aircraftSource = string.IsNullOrWhiteSpace(aircraft?.Title) ? request.AircraftSource : "recorder-reported";
                 WriteJson(zip, "telemetry.json", new
