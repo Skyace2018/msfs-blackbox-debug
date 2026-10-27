@@ -39,11 +39,20 @@ internal static class SelfTest
         var staleRejected = LivePreviewReader.ReadFromPath(previewPath, sessionId) is null;
         var diagnosticsPath = Path.Combine(Path.GetTempPath(), $"msfs-blackbox-diagnostics-self-test-{Guid.NewGuid():N}.zip");
         DiagnosticLog.Write("synthetic_self_test");
-        DeveloperExport.CreateDiagnosticsBundle(diagnosticsPath, new MonitorStatus { State = "not-running" });
+        var testStatus = new MonitorStatus { State = "not-running", Performance = new RecorderPerformanceSnapshot
+        {
+            ReceivedFrames = 3, AcceptedFrames = 2, RateLimitedFrames = 1,
+            EstimatedSamplingGaps = 1, MaxInputHandlerMs = 0.15
+        } };
+        DiagnosticLog.WritePerformance(testStatus, 0.5, 40_000_000);
+        DeveloperExport.CreateDiagnosticsBundle(diagnosticsPath, testStatus);
         using var diagnosticsZip = ZipFile.OpenRead(diagnosticsPath);
         var diagnosticsBundleValid = diagnosticsZip.GetEntry("viewer-diagnostics.log") is not null &&
             diagnosticsZip.GetEntry("recorder-status.json") is not null &&
             diagnosticsZip.GetEntry("telemetry.json") is null;
+        using var statusDocument = JsonDocument.Parse(diagnosticsZip.GetEntry("recorder-status.json")!.Open());
+        diagnosticsBundleValid &= statusDocument.RootElement.GetProperty("Performance")
+            .GetProperty("EstimatedSamplingGaps").GetInt64() == 1;
         return dump.Frames.Count == 2 && dump.Frames[1].Timestamp == 20
             && string.Equals(CommunityFolderDiscovery.ExtractPackagesPath(File.ReadAllText(configPath)), "D:\\MSFS Packages", StringComparison.OrdinalIgnoreCase)
             && preview?.Frames.Length == 2 && wrongSessionRejected && staleRejected && diagnosticsBundleValid;
