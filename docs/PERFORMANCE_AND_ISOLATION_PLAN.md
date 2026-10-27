@@ -10,9 +10,9 @@ The simulator callback should only sample the selected inputs and enqueue a comp
 
 ## Current implementation risks to address before live multi-simulator testing
 
-1. `LiveRecorderHost.Tick` runs on a Windows Forms timer attached to the SimConnect message-loop thread. It calls `EventCaptureService.ProcessRequests`, which can copy the entire ring and write a JSON ZIP. A slow disk or a one-hour export can delay receiving frames. Move export work to a bounded background worker. Take a short, deliberate snapshot boundary and report the marker time separately from the snapshot time.
-2. The same timer calls `LivePreviewStore.Publish`, which allocates a frame array, serializes up to 240 frames, and rewrites `live-preview.json` every 250 ms while frames change. Move preview production off the receive thread and rate-limit it. The viewer should skip file reads and redraws when hidden or on another page.
-3. `TelemetryRingBuffer.SnapshotOldestFirst` holds a lock while copying all retained frames. At the maximum configured 3600 seconds × 60 Hz, the raw 36-byte array is about 7.4 MiB, before JSON/export allocations. Measure the lock duration and use a snapshot strategy that keeps the receive path within budget.
+1. `LiveRecorderHost.Tick` runs on the SimConnect message-loop thread. Export request scanning, ring snapshots, and ZIP writing have now been moved to a background worker. The marker and snapshot times remain separate in the ZIP. **Live performance is still unverified.** A one-hour snapshot still briefly locks the ring while copying.
+2. Preview serialization and `live-preview.json` writes have moved to a separate background worker, so a slow ZIP cannot delay preview/status updates. The viewer now stops its chart timer while hidden, in the tray, or on another page. Preview/status file writes still need target-PC measurement.
+3. `TelemetryRingBuffer.SnapshotOldestFirst` holds a lock while copying all retained frames. The copy now uses at most two `Array.Copy` calls instead of per-frame modulo indexing. At 3600 seconds × 60 Hz, the raw 36-byte array is about 7.4 MiB. Measure maximum lock duration under load before calling this safe for every target PC.
 4. The v1 frame has a millisecond timestamp but no sequence number. Timestamp gaps can suggest missed samples but cannot distinguish all losses. A future version should add an adapter-side sequence number in the session envelope or protocol, count gaps, and show them in exports instead of implying continuous coverage.
 
 ## Proposed capture behavior
@@ -21,6 +21,8 @@ The simulator callback should only sample the selected inputs and enqueue a comp
 - Separate priorities: receive and ring append first; status and live chart second; compression and disk export last. Bounded worker queues must never stall the simulator callback. If a display update is dropped, count it. If an input frame is missed, record the gap in session diagnostics.
 - Keep the viewer's plotted sample count bounded and redraw at a human-readable rate. Do not render every simulator frame or keep redrawing a hidden chart.
 - Expose health counters: received/accepted frames, estimated missing samples, queue depth, callback duration, export duration, disk-write failures, and connection state. Avoid per-frame text logging.
+
+Received/accepted/rate-limited counts, timestamp-based sampling-gap estimates, and maximum input-handler duration are implemented. Queue depth, export duration, disk-write failure counters, and a sender-side sequence number remain future work. The current workers are one task each for export and preview/status; they do not create an unbounded per-frame task queue.
 
 MSFS SimConnect supports `CHANGED` client-data requests and an interval measured in period events; tune these against observed behavior instead of assuming visual-frame delivery is free. An X-Plane adapter would use its documented flight-loop callbacks and should avoid heavy work in those callbacks. See [MSFS request documentation](https://docs.flightsimulator.com/msfs2024/retail/programming-apis/simconnect/api-reference/events-and-data/simconnect_requestclientdata/) and [X-Plane flight-loop API](https://developer.x-plane.com/sdk/XPLMProcessing/).
 
