@@ -1,5 +1,6 @@
 // MIT License. Copyright (c) 2026 MSFS-Input-Blackbox contributors.
 #if MSFS_SIMCONNECT
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace MsfsInputBlackbox;
@@ -31,6 +32,7 @@ internal static class LiveRecorderHost
         private readonly SimConnectMonitor _monitor;
         private readonly EventCaptureService _capture;
         private readonly RecorderPreferences _preferences;
+        private readonly RecorderPerformance _performance;
         private readonly LivePreviewStore _preview;
         private readonly System.Windows.Forms.Timer _timer;
         private DateTimeOffset _lastFrameUtc;
@@ -44,7 +46,9 @@ internal static class LiveRecorderHost
         {
             Directory.CreateDirectory(DataDirectory);
             _preferences = RecorderPreferences.Load(DataDirectory);
-            _capture = new EventCaptureService(_preferences.SampleRateHz * _preferences.HistorySeconds, DataDirectory);
+            _performance = new RecorderPerformance(_preferences.SampleRateHz);
+            _capture = new EventCaptureService(_preferences.SampleRateHz * _preferences.HistorySeconds,
+                DataDirectory, _performance.Snapshot);
             _preview = new LivePreviewStore(DataDirectory);
             _window = new MessageWindow(SimConnectMessage);
             _monitor = new SimConnectMonitor(_window.Handle, SimConnectMessage);
@@ -61,13 +65,24 @@ internal static class LiveRecorderHost
 
         private void OnFrame(TelemetryFrame frame)
         {
-            if (!_preferences.LoggingEnabled) return;
-            if (_lastAcceptedTimestamp is { } previous &&
-                unchecked(frame.Timestamp - previous) < 1000u / (uint)_preferences.SampleRateHz) return;
-            _lastAcceptedTimestamp = frame.Timestamp;
-            _capture.AddFrame(frame);
-            _lastFrameUtc = DateTimeOffset.UtcNow;
-            _hasReceivedFrame = true;
+            var startedAtTicks = Stopwatch.GetTimestamp();
+            try
+            {
+                _performance.Received(frame.Timestamp);
+                if (!_preferences.LoggingEnabled) return;
+                if (_lastAcceptedTimestamp is { } previous &&
+                    unchecked(frame.Timestamp - previous) < 1000u / (uint)_preferences.SampleRateHz)
+                {
+                    _performance.RateLimited();
+                    return;
+                }
+                _lastAcceptedTimestamp = frame.Timestamp;
+                _capture.AddFrame(frame);
+                _performance.Accepted();
+                _lastFrameUtc = DateTimeOffset.UtcNow;
+                _hasReceivedFrame = true;
+            }
+            finally { _performance.HandlerFinished(startedAtTicks); }
         }
 
         private void OnAircraftState(AircraftState state)
@@ -97,7 +112,8 @@ internal static class LiveRecorderHost
                     _preferences.LoggingEnabled ? "Waiting for the first telemetry frame." : "Input logging is disabled in viewer settings.",
                 latest?.Timestamp, latest, _capture.Count, _capture.Capacity, _capture.SessionId,
                 aircraftType: aircraft?.Title, lastFrameReceivedAtUtc: _hasReceivedFrame ? _lastFrameUtc : null,
-                indicatedAirspeedKnots: aircraft?.IndicatedAirspeedKnots, altitudeFeet: aircraft?.AltitudeFeet);
+                indicatedAirspeedKnots: aircraft?.IndicatedAirspeedKnots, altitudeFeet: aircraft?.AltitudeFeet,
+                performance: _performance.Snapshot());
         }
 
         private void OnDisconnected(string reason) => EndSession(reason);
@@ -117,7 +133,8 @@ internal static class LiveRecorderHost
                 { finalDetail += "; dump could not be saved: " + ex.Message; }
             }
             MonitorStatusStore.Report("disconnected", finalDetail, bufferedFrames: _capture.Count,
-                bufferCapacity: _capture.Capacity, sessionId: _capture.SessionId);
+                bufferCapacity: _capture.Capacity, sessionId: _capture.SessionId,
+                performance: _performance.Snapshot());
             ExitThread();
         }
 
