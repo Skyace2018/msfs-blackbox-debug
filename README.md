@@ -12,6 +12,7 @@ An experimental, low-overhead flight-input recorder for Microsoft Flight Simulat
 - `docs/PROTOCOL.md` — binary contract and ownership assumptions.
 - `docs/LIVE_TEST_PLAN.md` — Windows/MSFS validation procedure.
 - `docs/PORTABLE_TEST_PACKAGE.md` — what the Windows development ZIP includes and how to test it on another PC.
+- `docs/PERFORMANCE_AND_ISOLATION_PLAN.md` — multi-simulator adapter boundaries, known receive-thread risks, and live performance gates.
 
 ## Quick start: synthetic recorder test
 
