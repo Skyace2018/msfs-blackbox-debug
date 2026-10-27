@@ -40,7 +40,7 @@ internal static class DeveloperExport
         WriteJson(archive, "recorder-status.json", new
         {
             status.State, status.UpdatedAtUtc, status.SessionId, status.LastFrameTimestamp,
-            status.BufferedFrames, status.BufferCapacity
+            status.BufferedFrames, status.BufferCapacity, status.Performance
         });
         WriteDiagnostics(archive);
         using var notes = new StreamWriter(archive.CreateEntry("README.txt").Open());
