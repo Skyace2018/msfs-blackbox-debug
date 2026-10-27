@@ -7,7 +7,7 @@ The desktop viewer and external recorder run as separate processes. The recorder
 1. Start the SDK-enabled external recorder and confirm that it is receiving frames.
 2. Open the Blackbox tray panel and select **Mark event + export**. The same action is available on the main dashboard.
 3. Select an export folder on first use. Later marks use the folder saved under **Settings → Developer handoff**.
-4. The viewer writes a request for the current session. The recorder polls requests every 250 ms, snapshots its rolling buffer, and writes a uniquely named developer ZIP. The tray confirms the saved path or reports an error.
+4. The viewer writes a request for the current session. A recorder background worker polls requests about every 250 ms, snapshots its rolling buffer, and writes a uniquely named developer ZIP. A separate worker publishes preview/status updates. The tray confirms the saved path or reports an error.
 
 The event's `markedAtUtc` is recorded when the request is queued. `capturedAtUtc` is when the recorder snapshots the buffer. Frame `Timestamp` values are monotonic milliseconds from the telemetry transport; they are **not** UTC. The live host loads the viewer's history and sample-rate preferences when the recorder starts, with a maximum of one hour at 60 Hz. Restart the recorder after changing those settings. The ZIP includes the buffer available when the request is processed, not an exact reconstruction of an earlier click if the recorder was delayed.
 
