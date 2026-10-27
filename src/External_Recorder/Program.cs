@@ -105,6 +105,28 @@ internal static class Program
         var preferences = RecorderPreferences.Load(eventDirectory);
         if (preferences.HistorySeconds != 3600 || preferences.SampleRateHz != 60)
             return Fail("Recorder did not load the selected one-hour history and 60 Hz sample rate.");
+        using (var exportStarted = new ManualResetEventSlim(false))
+        using (var releaseExport = new ManualResetEventSlim(false))
+        {
+            var previewTicks = 0;
+            var statusWrites = 0;
+            var blockOnce = 0;
+            using var workers = new RecorderIoWorkers(() =>
+            {
+                if (Interlocked.Exchange(ref blockOnce, 1) == 0)
+                {
+                    exportStarted.Set();
+                    releaseExport.Wait(TimeSpan.FromSeconds(5));
+                }
+            }, () => Interlocked.Increment(ref previewTicks));
+            if (!exportStarted.Wait(TimeSpan.FromSeconds(3))) return Fail("Export worker did not start.");
+            workers.PostStatus(() => Interlocked.Increment(ref statusWrites));
+            var independent = SpinWait.SpinUntil(() =>
+                Volatile.Read(ref previewTicks) > 0 && Volatile.Read(ref statusWrites) > 0,
+                TimeSpan.FromSeconds(3));
+            releaseExport.Set();
+            if (!independent) return Fail("A blocked export stalled preview or status work.");
+        }
         Console.WriteLine($"SELF-TEST PASS: layout=36 bytes, retained={snapshot.Length}, live preview and event ZIP created, one-hour preferences loaded, dump={dumpPath}");
         return 0;
     }
