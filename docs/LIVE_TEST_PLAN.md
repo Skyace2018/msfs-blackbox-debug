@@ -46,6 +46,14 @@ The managed interop delivers callbacks through a Windows message loop. The condi
 4. Confirm exactly one new ZIP appears, the tray reports its path, and the ZIP contains `telemetry.json`, `event.json`, `manifest.json`, and `README.txt`. Compare the UTC marker, frame range, last inputs, aircraft title, indicated airspeed, and altitude with the observed session. Confirm `event.json` labels whether the title was recorder-reported or user-entered.
 5. Repeat after disconnect; the button should be disabled and an old request must not export frames from a new session.
 
+## 6. Performance alongside other add-ons — UNKNOWN until run
+
+Use the same aircraft, airport, weather, graphics settings, and background add-ons for repeated 30-minute runs: simulator alone; simulator plus recorder; then simulator plus recorder and viewer (dashboard visible and in the tray). Include a representative busy-airport segment and a cruise segment. During one recorder run, mark an event and export a full buffer while continuing normal control inputs. Repeat each condition enough to distinguish the tool's effect from run-to-run frame-time variation.
+
+Record the simulator's median, 95th, and 99th percentile frame time; recorder and viewer CPU/memory; received/accepted/rate-limited frames; estimated timestamp gaps; maximum input-handler time; and any status heartbeat lapse or failed export. Check that an export does not stall reception. Compare to the provisional gates in [PERFORMANCE_AND_ISOLATION_PLAN.md](PERFORMANCE_AND_ISOLATION_PLAN.md). A timestamp gap is not proof of packet loss; preserve the actual recorder logs and mark interpretation separately.
+
+The simulator, aircraft, airport, weather preset, typical other add-ons, and target PC specifications are useful inputs for choosing this case. They are not prerequisites for the simulator-free implementation tests.
+
 ## Reporting rules
 
 Use **VERIFIED** only with command output or saved artifacts from the exact test run. Use **BLOCKED** for missing SDK/simulator prerequisites and **UNKNOWN** for unexecuted behavior. Preserve no personal flight data in public issue attachments.
