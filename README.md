@@ -36,6 +36,8 @@ For another Windows x64 computer, use the self-contained development ZIP describ
 
 Development diagnostics include a 30-second viewer CPU/memory summary. A connected recorder publishes aggregate frame counters and adds a `performance.json` summary to event exports. These counters have synthetic-test coverage; simulator frame-time impact still needs live measurement under the [performance and isolation plan](docs/PERFORMANCE_AND_ISOLATION_PLAN.md).
 
+Recorder export and preview/status file work now run on separate background workers, leaving the SimConnect receive thread for input capture. The viewer pauses live-chart redraws while hidden or on another page. This behavior passed simulator-free checks but still needs the target-PC performance test.
+
 Choose **Settings → Appearance** to follow Windows, force Light mode, or force Dark mode.
 Minimizing keeps the viewer running in the Windows notification area. Click its blue Blackbox tray icon for a compact status panel with **Open full screen**, **Minimize to tray**, and **Exit Blackbox**. Double-click the icon to restore the full dashboard. The executable and tray icon use the same blue Blackbox mark.
 
