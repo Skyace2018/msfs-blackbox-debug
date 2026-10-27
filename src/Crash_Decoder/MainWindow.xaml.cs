@@ -14,6 +14,9 @@ public partial class MainWindow : Window
 {
     private readonly AppSettings _settings = SettingsStore.Load();
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private readonly DispatcherTimer _performanceLogTimer = new() { Interval = TimeSpan.FromSeconds(30) };
+    private TimeSpan _lastViewerCpu = Process.GetCurrentProcess().TotalProcessorTime;
+    private DateTimeOffset _lastPerformanceLogAtUtc = DateTimeOffset.UtcNow;
     private TelemetryDump? _loadedDump;
     private bool _isApplyingSettings;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
@@ -31,9 +34,12 @@ public partial class MainWindow : Window
         InitializeTray();
         _statusTimer.Tick += (_, _) => UpdateStatus();
         _statusTimer.Start();
+        _performanceLogTimer.Tick += (_, _) => WritePerformanceLog();
+        _performanceLogTimer.Start();
         Closed += (_, _) =>
         {
             _statusTimer.Stop();
+            _performanceLogTimer.Stop();
             _previewTimer.Stop();
             _trayFlyout?.Close();
             if (_trayIcon is not null) { _trayIcon.Visible = false; _trayIcon.Dispose(); }
@@ -402,6 +408,18 @@ public partial class MainWindow : Window
         UpdateCapacity(status);
         if (ActionFeedback.Text.Length > 0 && DateTimeOffset.UtcNow > _actionFeedbackUntilUtc) ActionFeedback.Text = "";
         if (_trayFlyout?.IsVisible == true) _trayFlyout.UpdateDashboard(status, _captureMessage, _pendingEventId is not null, _settings.AircraftTitle);
+    }
+
+    private void WritePerformanceLog()
+    {
+        var now = DateTimeOffset.UtcNow;
+        using var process = Process.GetCurrentProcess();
+        var cpu = process.TotalProcessorTime;
+        var elapsedSeconds = Math.Max(0.001, (now - _lastPerformanceLogAtUtc).TotalSeconds);
+        var cpuCorePercent = Math.Max(0, (cpu - _lastViewerCpu).TotalSeconds / elapsedSeconds * 100);
+        _lastViewerCpu = cpu;
+        _lastPerformanceLogAtUtc = now;
+        DiagnosticLog.WritePerformance(MonitorStatusReader.Read(), cpuCorePercent, process.WorkingSet64);
     }
 
     private void UpdateCapacity(MonitorStatus? status)
