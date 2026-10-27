@@ -30,11 +30,14 @@ internal sealed class EventCaptureService
     private readonly string _requestDirectory;
     private readonly string _resultDirectory;
     private readonly Guid _sessionId = Guid.NewGuid();
+    private readonly Func<RecorderPerformanceSnapshot>? _performanceSnapshot;
     private TelemetryFrame? _latest;
     private AircraftState? _aircraftState;
 
-    public EventCaptureService(int capacity, string dataDirectory)
+    public EventCaptureService(int capacity, string dataDirectory,
+        Func<RecorderPerformanceSnapshot>? performanceSnapshot = null)
     {
+        _performanceSnapshot = performanceSnapshot;
         _ring = new TelemetryRingBuffer(capacity);
         _requestDirectory = Path.Combine(dataDirectory, "event-requests");
         _resultDirectory = Path.Combine(dataDirectory, "event-results");
@@ -142,11 +145,20 @@ internal sealed class EventCaptureService
                     firstTimestampMs = frames[0].Timestamp, lastTimestampMs = last.Timestamp,
                     note = "Frame timestamps are simulator monotonic milliseconds. markedAtUtc is the user click time; the buffer snapshot is taken when the recorder processes the request."
                 });
+                if (_performanceSnapshot is not null)
+                    WriteJson(zip, "performance.json", new
+                    {
+                        schema = "msfs-input-blackbox/performance/v1",
+                        capturedAtUtc, sessionId = _sessionId,
+                        gapInterpretation = "Estimated from source timestamp intervals; not a confirmed packet-loss count.",
+                        counters = _performanceSnapshot()
+                    });
                 using var notes = new StreamWriter(zip.CreateEntry("README.txt").Open());
                 notes.WriteLine("MSFS Input Blackbox event export");
                 notes.WriteLine("telemetry.json contains the rolling inputs captured when the event request was processed.");
                 notes.WriteLine("event.json contains the user timestamp, latest inputs, and available aircraft metadata.");
                 notes.WriteLine("Aircraft title and aircraft variables identify their source in event.json; review before sharing.");
+                notes.WriteLine("performance.json contains aggregate recorder counters; gaps are estimates, not confirmed packet loss.");
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
