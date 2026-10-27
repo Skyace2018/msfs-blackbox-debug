@@ -45,6 +45,8 @@ Bundles contain a machine-readable `manifest.json`, `viewer-diagnostics.log`, an
 
 The development viewer writes a local `viewer-diagnostics.log` under `%LocalAppData%\MSFS-Input-Blackbox`. It records startup, exit, recorder state transitions, and unhandled exception types, HRESULTs, and method names. It excludes exception messages and configured folder paths. The active log rolls at 1 MB. Export is explicit; no diagnostic data is sent automatically. This is a viewer log, not an MSFS crash stack trace.
 
+Every 30 seconds while open, the viewer also logs aggregate CPU and memory use. If the recorder publishes performance counters, the same entry includes received/accepted/rate-limited frames, an estimated sampling-gap count, and maximum input-handler time. It never logs every frame as text.
+
 ## Rolling capacity
 
 The retention selector now supports up to one hour. The dashboard estimates its planned frame capacity from retention × sample rate. During a real monitor session, the live status contract can supply the actual count/capacity; the UI warns at 90%, and the recorder ring buffer raises a one-time 90% capacity event. At full capacity it remains a rolling buffer, overwriting the oldest frames rather than stopping capture.
