@@ -18,6 +18,16 @@ internal sealed class MonitorStatus
     public DateTimeOffset? LastFrameReceivedAtUtc { get; init; }
     public double? IndicatedAirspeedKnots { get; init; }
     public double? AltitudeFeet { get; init; }
+    public RecorderPerformanceSnapshot? Performance { get; init; }
+}
+
+internal sealed class RecorderPerformanceSnapshot
+{
+    public long ReceivedFrames { get; init; }
+    public long AcceptedFrames { get; init; }
+    public long RateLimitedFrames { get; init; }
+    public long EstimatedSamplingGaps { get; init; }
+    public double MaxInputHandlerMs { get; init; }
 }
 
 internal static class MonitorStatusReader
