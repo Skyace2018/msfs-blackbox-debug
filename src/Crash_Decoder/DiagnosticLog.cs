@@ -1,6 +1,7 @@
 // MIT License. Copyright (c) 2026 MSFS-Input-Blackbox contributors.
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 
 namespace MsfsInputBlackbox.Decoder;
 
@@ -25,6 +26,27 @@ internal static class DiagnosticLog
             line.Append($" | {exception.GetType().FullName} | HRESULT 0x{exception.HResult:X8}");
             if (method is not null) line.Append($" | {method.DeclaringType?.FullName}.{method.Name}");
         }
+        AppendLine(line.ToString());
+    }
+
+    public static void WritePerformance(MonitorStatus status, double viewerCpuCorePercent, long viewerWorkingSetBytes)
+    {
+        var body = JsonSerializer.Serialize(new
+        {
+            schema = "msfs-input-blackbox/performance-log/v1",
+            capturedAtUtc = DateTimeOffset.UtcNow,
+            viewerCpuCorePercent = Math.Round(viewerCpuCorePercent, 2),
+            viewerWorkingSetBytes,
+            recorderState = status.State,
+            status.SessionId,
+            recorder = status.Performance,
+            note = "EstimatedSamplingGaps uses timestamp intervals and is not confirmed packet loss."
+        });
+        AppendLine(body);
+    }
+
+    private static void AppendLine(string line)
+    {
         lock (Gate)
         {
             try
