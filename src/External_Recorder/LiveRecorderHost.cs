@@ -34,6 +34,7 @@ internal static class LiveRecorderHost
         private readonly RecorderPreferences _preferences;
         private readonly RecorderPerformance _performance;
         private readonly LivePreviewStore _preview;
+        private readonly RecorderIoWorkers _ioWorkers;
         private readonly System.Windows.Forms.Timer _timer;
         private DateTimeOffset _lastFrameUtc;
         private DateTimeOffset _lastReportUtc;
@@ -56,6 +57,10 @@ internal static class LiveRecorderHost
             _monitor.FrameReceived += OnFrame;
             _monitor.AircraftStateReceived += OnAircraftState;
             _monitor.Disconnected += OnDisconnected;
+            _ioWorkers = new RecorderIoWorkers(_capture.ProcessRequests, () =>
+            {
+                if (_capture.Latest is { } frame) _preview.Publish(_capture.SessionId, frame);
+            }, ex => MonitorStatusStore.Report("error", "Recorder background I/O failed: " + ex.GetType().Name));
             _timer = new System.Windows.Forms.Timer { Interval = 250 };
             _timer.Tick += (_, _) => Tick();
             _timer.Start();
@@ -93,10 +98,6 @@ internal static class LiveRecorderHost
 
         private void Tick()
         {
-            try { _capture.ProcessRequests(); }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            { MonitorStatusStore.Report("error", "Cannot process event requests: " + ex.Message); }
-            if (_capture.Latest is { } previewFrame) _preview.Publish(_capture.SessionId, previewFrame);
             var now = DateTimeOffset.UtcNow;
             if (_hasReceivedFrame && now - _lastFrameUtc > TimeSpan.FromSeconds(5))
             {
@@ -107,13 +108,19 @@ internal static class LiveRecorderHost
             _lastReportUtc = now;
             var latest = _capture.Latest;
             var aircraft = _aircraftState;
-            MonitorStatusStore.Report(_hasReceivedFrame ? "connected" : "connecting",
-                _hasReceivedFrame ? "Receiving live telemetry frames." :
+            var hasReceivedFrame = _hasReceivedFrame;
+            var lastFrameUtc = _lastFrameUtc;
+            var count = _capture.Count;
+            var capacity = _capture.Capacity;
+            var sessionId = _capture.SessionId;
+            var performance = _performance.Snapshot();
+            _ioWorkers.PostStatus(() => MonitorStatusStore.Report(hasReceivedFrame ? "connected" : "connecting",
+                hasReceivedFrame ? "Receiving live telemetry frames." :
                     _preferences.LoggingEnabled ? "Waiting for the first telemetry frame." : "Input logging is disabled in viewer settings.",
-                latest?.Timestamp, latest, _capture.Count, _capture.Capacity, _capture.SessionId,
-                aircraftType: aircraft?.Title, lastFrameReceivedAtUtc: _hasReceivedFrame ? _lastFrameUtc : null,
+                latest?.Timestamp, latest, count, capacity, sessionId,
+                aircraftType: aircraft?.Title, lastFrameReceivedAtUtc: hasReceivedFrame ? lastFrameUtc : null,
                 indicatedAirspeedKnots: aircraft?.IndicatedAirspeedKnots, altitudeFeet: aircraft?.AltitudeFeet,
-                performance: _performance.Snapshot());
+                performance: performance));
         }
 
         private void OnDisconnected(string reason) => EndSession(reason);
@@ -123,6 +130,7 @@ internal static class LiveRecorderHost
             if (_ending) return;
             _ending = true;
             _timer.Stop();
+            _ioWorkers.Dispose();
             var frames = _capture.Snapshot();
             var finalDetail = reason;
             if (frames.Length > 0 && _preferences.KeepCrashDumps)
@@ -141,6 +149,7 @@ internal static class LiveRecorderHost
         protected override void ExitThreadCore()
         {
             _timer.Dispose();
+            _ioWorkers.Dispose();
             _monitor.Dispose();
             _window.DestroyHandle();
             base.ExitThreadCore();
